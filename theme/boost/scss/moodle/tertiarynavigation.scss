@@ -30,6 +30,7 @@
     .navitem-divider {
         width: 1px;
         background-color: $gray-300;
+        height: 40px;
     }
 
     & > a.btn,
@@ -49,9 +50,14 @@
         }
     }
 
-    .navitem:not(:last-child),
-    .navitem-divider:not(:last-child) {
+    .navitem,
+    .navitem-divider {
         margin-right: 20px;
+    }
+
+    .navitem-area {
+        display:flex;
+        flex-wrap: wrap;
     }
 }
 
@@ -59,6 +65,44 @@
     .tertiary-navigation {
         .mform {
             padding-left: initial;
+        }
+    }
+}
+
+@include media-breakpoint-up(xl) {
+    .tertiary-navigation {
+        .tertiary-navigation-row {
+            display: none;
+        }
+    }
+}
+
+@include media-breakpoint-down(lg) {
+    .tertiary-navigation {
+        .navitem-divider:is(:last-child) {
+            display: none;
+        }
+        .navitem-bulk-actions {
+            margin-top: 10px;
+        }
+    }
+}
+
+@include media-breakpoint-down(xs) {
+    .tertiary-navigation {
+        .page-toggler p {
+            display: none;
+        }
+
+        .float-right .navitem-divider,
+        .float-left .navitem-divider {
+            display: none;
+        }
+
+        .tertiary-navigation-selector {
+            .dropdown-toggle {
+                font-size: 1.1rem;
+            }
         }
     }
 }
