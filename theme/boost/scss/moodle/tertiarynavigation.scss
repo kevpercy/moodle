@@ -25,11 +25,13 @@
     .navitem-divider {
         display: flex;
         margin-bottom: 25px;
+        margin-right: 20px;
     }
 
     .navitem-divider {
         width: 1px;
         background-color: $gray-300;
+        height: 40px;
     }
 
     & > a.btn,
@@ -49,9 +51,49 @@
         }
     }
 
-    .navitem:not(:last-child),
-    .navitem-divider:not(:last-child) {
-        margin-right: 20px;
+    .navitem-area {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .tertiary-navigation-toggle {
+        float: right;
+    }
+
+    .page-toggler {
+        display: flex;
+        white-space: nowrap;
+    }
+
+    .btn {
+        & > div {
+            max-width: 250px;
+
+            & > div,
+            span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    }
+}
+
+@include media-breakpoint-up(xl) {
+    .tertiary-navigation {
+        .tertiary-navigation-row-divider {
+            display: none;
+        }
+    }
+}
+
+@include media-breakpoint-down(lg) {
+    .tertiary-navigation {
+        .float-right .navitem-divider:is(:last-child) {
+            display: none;
+        }
+        .navitem-bulk-actions {
+            margin-top: 10px;
+        }
     }
 }
 
@@ -59,6 +101,27 @@
     .tertiary-navigation {
         .mform {
             padding-left: initial;
+        }
+    }
+}
+
+@include media-breakpoint-down(xs) {
+    .tertiary-navigation {
+        .tertiary-navigation-toggle {
+            float: left;
+
+            .page-toggler {
+                display: block;
+
+                p {
+                    font-size: 80%;
+                    font-weight: 400;
+                }
+            }
+        }
+
+        .navitem-divider {
+            display: none;
         }
     }
 }
