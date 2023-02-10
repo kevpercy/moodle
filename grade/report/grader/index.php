@@ -47,6 +47,8 @@ $PAGE->set_url(new moodle_url('/grade/report/grader/index.php', array('id'=>$cou
 $PAGE->set_pagelayout('report');
 $PAGE->requires->js_call_amd('gradereport_grader/stickycolspan', 'init');
 
+$PAGE->requires->js_call_amd('gradereport_grader/feedback_modal', 'init');
+
 // basic access checks
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     throw new \moodle_exception('invalidcourseid');
