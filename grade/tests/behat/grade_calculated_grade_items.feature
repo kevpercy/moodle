@@ -27,7 +27,8 @@ Feature: Calculated grade items can be used in the gradebook
     Given I press "Add category"
     And I set the following fields to these values:
       | Category name | Calc cat |
-    And I press "Save changes"
+    And I click on "Save" "button" in the "New category" "dialogue"
+    And I wait until the page is ready
     And I press "Add grade item"
     And I set the following fields to these values:
       | Item name | grade item 1 |
@@ -54,7 +55,8 @@ Feature: Calculated grade items can be used in the gradebook
     Given I press "Add category"
     And I set the following fields to these values:
       | Category name | Calc cat |
-    And I press "Save changes"
+    And I click on "Save" "button" in the "New category" "dialogue"
+    And I wait until the page is ready
     And I press "Add grade item"
     And I set the following fields to these values:
       | Item name | grade item 1 |
