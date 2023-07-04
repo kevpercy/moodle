@@ -105,20 +105,12 @@
             </div>
             <div class="navitem-divider"></div>
         {{/generalnavselector}}
-        {{#addgradeitembutton}}
-            <div class="navitem">
-                {{>core/single_button}}
+        {{#additemdropdown}}
+            <div class="navitem-divider ml-auto"></div>
+            <div class="navitem d-flex flex-column align-self-center">
+                {{>core_grades/gradebook_setup_add_item_form}}
             </div>
-        {{/addgradeitembutton}}
-        {{#addoutcomeitembutton}}
-            <div class="navitem">
-                {{>core/single_button}}
-            </div>
-        {{/addoutcomeitembutton}}
-        {{#addcategorybutton}}
-            <div class="navitem">
-                {{>core/single_button}}
-            </div>
-        {{/addcategorybutton}}
+            <div class="navitem-divider"></div>
+        {{/additemdropdown}}
     </div>
 </div>

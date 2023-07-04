@@ -55,58 +55,24 @@ class gradebook_setup_action_bar extends action_bar {
             new moodle_url('/grade/edit/tree/index.php', ['id' => $courseid]), 'settings', 'setup');
         $data = $generalnavselector->export_for_template($output);
 
-        // Add a button to the action bar with a link to the 'add grade item' page.
-        $addgradeitemlink = new moodle_url('#');
-        $addgradeitembutton = new \single_button(
-            $addgradeitemlink,
-            get_string('additem', 'grades'),
-            'get',
-            \single_button::BUTTON_SECONDARY,
-            [
-                'class' => 'btn btn-secondary',
-                'data-courseid' => $courseid,
-                'data-itemid' => -1,
-                'data-trigger' => 'add-item-form',
-                'data-gprplugin' => 'tree'
+        // Add a button to the action bar with a link to the 'add grade item' and 'add category' modals.
+        $data['additemdropdown'] = [
+            'addgradeitemlist' => [
+                'courseid' => $courseid,
+            ],
+            'addcategorylist' => [
+                'courseid' => $courseid,
             ]
-        );
-        $data['addgradeitembutton'] = $addgradeitembutton->export_for_template($output);
+        ];
 
-        // If outcomes are enabled, add a button to the action bar with a link to the 'add outcome item' page.
+        // If outcomes are enabled, add a button to the action bar with a link to the 'add outcome item' modal.
         if (!empty($CFG->enableoutcomes) && sizeof(\grade_outcome::fetch_all_available($courseid)) > 0) {
-            // Add a button to the action bar with a link to the 'add outcome item' page.
-            $addoutcomeitem = new moodle_url('#');
-            $addoutcomeitembutton = new \single_button(
-                $addoutcomeitem,
-                get_string('addoutcomeitem', 'grades'),
-                'get',
-                \single_button::BUTTON_SECONDARY,
-                [
-                    'class' => 'btn btn-secondary',
-                    'data-courseid' => $courseid,
-                    'data-itemid' => -1,
-                    'data-trigger' => 'add-outcome-form',
-                    'data-gprplugin' => 'tree'
-                ]
-            );
-            $data['addoutcomeitembutton'] = $addoutcomeitembutton->export_for_template($output);
+            // Add a button to the action bar with a link to the 'add outcome item' modal.
+            $data['additemdropdown']['addoutcomeitemlist'] = [
+                'courseid' => $courseid,
+            ];
         }
 
-        // Add a button to the action bar with a link to the 'add category' page.
-        $addgradecategorybutton = new \single_button(
-            $addgradeitemlink,
-            get_string('addcategory', 'grades'),
-            'get',
-            \single_button::BUTTON_SECONDARY,
-            [
-                'class' => 'btn btn-secondary',
-                'data-courseid' => $courseid,
-                'data-category' => -1,
-                'data-trigger' => 'add-category-form',
-                'data-gprplugin' => 'tree'
-            ]
-        );
-        $data['addcategorybutton'] = $addgradecategorybutton->export_for_template($output);
         return $data;
     }
 }
