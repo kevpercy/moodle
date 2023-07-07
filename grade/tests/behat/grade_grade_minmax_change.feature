@@ -22,7 +22,8 @@ Feature: We can change the maximum and minimum number of points for manual items
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Gradebook setup" in the course gradebook
-    And I press "Add grade item"
+    And I press "Add"
+    And I click on "Add grade item" "link"
     And I set the following fields to these values:
       | Item name | Manual item 1 |
       | Minimum grade | 0 |
