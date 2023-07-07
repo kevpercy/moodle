@@ -20,12 +20,14 @@ Feature: Hidden grade items should be hidden when grade category is locked, but 
     And I log in as "admin"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Gradebook setup" in the course gradebook
-    And I press "Add category"
+    And I press "Add"
+    And I click on "Add category" "link"
     And I set the following fields to these values:
       | Category name | Test locked category |
     And I click on "Save" "button" in the "New category" "dialogue"
     And I wait until the page is ready
-    And I press "Add grade item"
+    And I press "Add"
+    And I click on "Add grade item" "link"
     And I set the following fields to these values:
       | Item name | Hidden item |
       | Hidden | 1 |
@@ -68,12 +70,14 @@ Feature: Hidden grade items should be hidden when grade category is locked, but 
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Gradebook setup" in the course gradebook
-    And I press "Add category"
+    And I press "Add"
+    And I click on "Add category" "link"
     And I set the following fields to these values:
       | Category name | Test overridden category B|
     And I click on "Save" "button" in the "New category" "dialogue"
     And I wait until the page is ready
-    And I press "Add grade item"
+    And I press "Add"
+    And I click on "Add grade item" "link"
     And I set the following fields to these values:
       | Item name | Cat b item |
       | Grade category | Test overridden category B |
