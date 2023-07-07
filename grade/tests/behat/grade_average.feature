@@ -29,7 +29,8 @@ Feature: Average grades are displayed in the gradebook
     And I press "Save changes"
     # Add a manual grade item
     And I navigate to "Setup > Gradebook setup" in the course gradebook
-    And I press "Add grade item"
+    And I press "Add"
+    And I click on "Add grade item" "link"
     And I set the following fields to these values:
       | Item name | Manual item 1 |
     And I click on "Save" "button" in the "New grade item" "dialogue"

@@ -29,7 +29,8 @@ Feature: Student and teacher's view of aggregated grade items is consistent when
     And I log in as "admin"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Gradebook setup" in the course gradebook
-    And I press "Add grade item"
+    And I press "Add"
+    And I click on "Add grade item" "link"
     And I set the following fields to these values:
       | Item name | calculated |
     And I click on "Save" "button" in the "New grade item" "dialogue"
