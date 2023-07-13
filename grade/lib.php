@@ -2094,7 +2094,7 @@ class grade_structure {
                     'data-courseid' => $this->courseid,
                     'data-itemid' => $object->id, 'data-trigger' => 'add-item-form'
                 ]);
-            } else if (sizeof(grade_outcome::fetch_all_available($this->courseid)) > 0) {
+            } else if (count(grade_outcome::fetch_all_available($this->courseid)) > 0) {
                 return html_writer::link($url, get_string('itemsedit', 'grades'), [
                     'class' => 'dropdown-item',
                     get_string('itemsedit', 'grades'),

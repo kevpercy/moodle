@@ -30,8 +30,8 @@ use moodle_url;
 require_once($CFG->dirroot.'/grade/lib.php');
 
 /**
- * Prints the add outcome gradebook form.
- * We do some checking to ensure outcomes are enabled and linked to the course before showing this form.
+ * Prints the add outcome gradebook form we do some checking to ensure outcomes are enabled
+ * and linked to the course before showing this form.
  *
  * @copyright 2023 Mathew May <mathew.solutions>
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
@@ -60,11 +60,6 @@ class add_outcome extends dynamic_form {
                 $url = new moodle_url('/grade/edit/tree/item.php', ['id' => $id, 'courseid' => $courseid]);
                 redirect($this->gpr->add_url_params($url));
             }
-            if ($gradeitem->is_course_item() || $gradeitem->is_category_item()) {
-                $gradecategory = $gradeitem->get_item_category();
-                $url = new moodle_url('/grade/edit/tree/category.php', ['id' => $gradecategory->id, 'courseid' => $courseid]);
-                redirect($this->gpr->add_url_params($url));
-            }
             $item = $gradeitem->get_record_data();
             $parentcategory = $gradeitem->get_parent_category();
             if ($item->itemtype == 'mod') {
@@ -79,7 +74,6 @@ class add_outcome extends dynamic_form {
             $parentcategory = grade_category::fetch_course_category($courseid);
         }
         $item->parentcategory = $parentcategory->id;
-        $decimalpoints = $gradeitem->get_decimals();
 
         if ($item->hidden > 1) {
             $item->hiddenuntil = $item->hidden;
@@ -89,9 +83,6 @@ class add_outcome extends dynamic_form {
         }
 
         $item->locked = !empty($item->locked);
-
-        $item->grademax   = format_float($item->grademax, $decimalpoints);
-        $item->grademin   = format_float($item->grademin, $decimalpoints);
 
         if ($parentcategory->aggregation == GRADE_AGGREGATE_SUM || $parentcategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2) {
             $item->aggregationcoef = $item->aggregationcoef == 0 ? 0 : 1;
@@ -178,7 +169,7 @@ class add_outcome extends dynamic_form {
         $mform->addElement('advcheckbox', 'locked', get_string('locked', 'grades'));
         $mform->addHelpButton('locked', 'locked', 'grades');
 
-        /// Parent category related settings.
+        // Parent category related settings.
         $mform->addElement('advcheckbox', 'weightoverride', get_string('adjustedweight', 'grades'));
         $mform->addHelpButton('weightoverride', 'weightoverride', 'grades');
 
@@ -195,13 +186,17 @@ class add_outcome extends dynamic_form {
             $options[$cat->id] = $cat->get_name();
             if ($cat->is_aggregationcoef_used()) {
                 if ($cat->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
-                    $coefstring = ($coefstring == '' || $coefstring =='aggregationcoefweight') ? 'aggregationcoefweight' : 'aggregationcoef';
+                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefweight') ?
+                        'aggregationcoefweight' : 'aggregationcoef';
                 } else if ($cat->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2) {
-                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextrasum') ? 'aggregationcoefextrasum' : 'aggregationcoef';
+                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextrasum') ?
+                        'aggregationcoefextrasum' : 'aggregationcoef';
                 } else if ($cat->aggregation == GRADE_AGGREGATE_EXTRACREDIT_MEAN) {
-                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextraweight') ? 'aggregationcoefextraweight' : 'aggregationcoef';
+                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextraweight') ?
+                        'aggregationcoefextraweight' : 'aggregationcoef';
                 } else if ($cat->aggregation == GRADE_AGGREGATE_SUM) {
-                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextrasum') ? 'aggregationcoefextrasum' : 'aggregationcoef';
+                    $coefstring = ($coefstring == '' || $coefstring == 'aggregationcoefextrasum') ?
+                        'aggregationcoefextrasum' : 'aggregationcoef';
                 } else {
                     $coefstring = 'aggregationcoef';
                 }
@@ -236,7 +231,7 @@ class add_outcome extends dynamic_form {
 
         } else {
             // If we wanted to change parent of existing item - we would have to verify there are no circular references in parents.
-            if ($mform->elementExists('parentcategory')) {
+            if ($id > -1 && $mform->elementExists('parentcategory')) {
                 $mform->hardFreeze('parentcategory');
             }
 
@@ -384,8 +379,8 @@ class add_outcome extends dynamic_form {
             $hide = empty($data->hidden) ? 0 : $data->hidden;
         }
 
-        $locked   = empty($data->locked) ? 0: $data->locked;
-        $locktime = empty($data->locktime) ? 0: $data->locktime;
+        $locked   = empty($data->locked) ? 0 : $data->locked;
+        $locktime = empty($data->locktime) ? 0 : $data->locktime;
 
         $convert = ['gradepass', 'aggregationcoef', 'aggregationcoef2'];
         foreach ($convert as $param) {
@@ -420,11 +415,11 @@ class add_outcome extends dynamic_form {
 
             if ($items = grade_item::fetch_all(['itemtype' => 'mod', 'itemmodule' => $gradeitem->itemmodule,
                 'iteminstance' => $gradeitem->iteminstance, 'courseid' => $data->courseid])) {
-                if (!empty($gradeitem->id) and in_array($gradeitem, $items)) {
+                if (!empty($gradeitem->id) && in_array($gradeitem, $items)) {
                     // No change needed.
                 } else {
                     $max = 999;
-                    foreach($items as $item) {
+                    foreach ($items as $item) {
                         if (empty($item->outcomeid)) {
                             continue;
                         }
@@ -442,7 +437,7 @@ class add_outcome extends dynamic_form {
         // Fix scale used.
         $outcome = grade_outcome::fetch(['id' => $data->outcomeid]);
         $gradeitem->gradetype = GRADE_TYPE_SCALE;
-        $gradeitem->scaleid = $outcome->scaleid; //TODO: we might recalculate existing outcome grades when changing scale
+        $gradeitem->scaleid = $outcome->scaleid; // TODO: we might recalculate existing outcome grades when changing scale.
 
         if (empty($gradeitem->id)) {
             $gradeitem->insert();

@@ -73,7 +73,7 @@ class gradebook_setup_action_bar extends action_bar {
         $data['addgradeitembutton'] = $addgradeitembutton->export_for_template($output);
 
         // If outcomes are enabled, add a button to the action bar with a link to the 'add outcome item' page.
-        if (!empty($CFG->enableoutcomes) && sizeof(\grade_outcome::fetch_all_available($courseid)) > 0) {
+        if (!empty($CFG->enableoutcomes) && count(\grade_outcome::fetch_all_available($courseid)) > 0) {
             // Add a button to the action bar with a link to the 'add outcome item' page.
             $addoutcomeitem = new moodle_url('#');
             $addoutcomeitembutton = new \single_button(

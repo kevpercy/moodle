@@ -55,7 +55,7 @@ export const init = () => {
             trigger = event.target.closest('[data-trigger="add-outcome-form"]');
             formClass = 'core_grades\\form\\add_outcome';
             title = trigger.getAttribute('data-itemid') === '-1' ?
-                getString('newitem', 'core_grades') : getString('outcomeitemsedit', 'core_grades');
+                getString('newoutcomeitem', 'core_grades') : getString('outcomeitemsedit', 'core_grades');
             args.itemid = trigger.getAttribute('data-itemid');
         }
 
