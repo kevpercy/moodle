@@ -37,96 +37,21 @@ class mod_url_mod_form extends moodleform_mod {
 
         //-------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'48'));
-        $mform->addHelpButton('name', 'name', 'url');
-        if (!empty($CFG->formatstringstriptags)) {
-            $mform->setType('name', PARAM_TEXT);
-        } else {
-            $mform->setType('name', PARAM_CLEANHTML);
-        }
-        $mform->addRule('name', null, 'required', null, 'client');
-        $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
-        $mform->addElement('url', 'externalurl', get_string('externalurl', 'url'), array('size'=>'60'), array('usefilepicker'=>true));
-        $mform->setType('externalurl', PARAM_RAW_TRIMMED);
-        $mform->addRule('externalurl', null, 'required', null, 'client');
-        $this->standard_intro_elements();
-        $element = $mform->getElement('introeditor');
-        $attributes = $element->getAttributes();
-        $attributes['rows'] = 5;
-        $element->setAttributes($attributes);
-        //-------------------------------------------------------
-        $mform->addElement('header', 'optionssection', get_string('appearance'));
 
-        if ($this->current->instance) {
-            $options = resourcelib_get_displayoptions(explode(',', $config->displayoptions), $this->current->display);
-        } else {
-            $options = resourcelib_get_displayoptions(explode(',', $config->displayoptions));
-        }
-        if (count($options) == 1) {
-            $mform->addElement('hidden', 'display');
-            $mform->setType('display', PARAM_INT);
-            reset($options);
-            $mform->setDefault('display', key($options));
-        } else {
-            $mform->addElement('select', 'display', get_string('displayselect', 'url'), $options);
-            $mform->setDefault('display', $config->display);
-            $mform->addHelpButton('display', 'displayselect', 'url');
-        }
+        $mform->addElement('text', 'testing_a', 'Testing A', ['size' => 10]);
+        $mform->setType('testing_a', PARAM_TEXT);
+        $mform->addElement('text', 'testing_b', 'Testing B', ['size' => 10]);
+        $mform->setType('testing_b', PARAM_TEXT);
+        $mform->addElement('checkbox', 'element_to_show', 'This is a test and will hide if Testing A = 1, and Testing B = 2');
 
-        if (array_key_exists(RESOURCELIB_DISPLAY_POPUP, $options)) {
-            $mform->addElement('text', 'popupwidth', get_string('popupwidth', 'url'), array('size'=>3));
-            if (count($options) > 1) {
-                $mform->hideIf('popupwidth', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
-            }
-            $mform->setType('popupwidth', PARAM_INT);
-            $mform->setDefault('popupwidth', $config->popupwidth);
+        /**
+         * This will show the checkbox if Testing A is not 1, OR if Testing B is not 2.
+         * This has the effect of hiding the checkbox if Testing A = 1 AND Testing B = 2.
+         */
+        $mform->showIf('element_to_show', 'testing_a', 'neq', 1);
+        $mform->showIf('element_to_show', 'testing_b', 'neq', 2);
 
-            $mform->addElement('text', 'popupheight', get_string('popupheight', 'url'), array('size'=>3));
-            if (count($options) > 1) {
-                $mform->hideIf('popupheight', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
-            }
-            $mform->setType('popupheight', PARAM_INT);
-            $mform->setDefault('popupheight', $config->popupheight);
-        }
-
-        if (array_key_exists(RESOURCELIB_DISPLAY_AUTO, $options) or
-          array_key_exists(RESOURCELIB_DISPLAY_EMBED, $options) or
-          array_key_exists(RESOURCELIB_DISPLAY_FRAME, $options)) {
-            $mform->addElement('checkbox', 'printintro', get_string('printintro', 'url'));
-            $mform->hideIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_POPUP);
-            $mform->hideIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_OPEN);
-            $mform->hideIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_NEW);
-            $mform->setDefault('printintro', $config->printintro);
-        }
-
-        //-------------------------------------------------------
-        $mform->addElement('header', 'parameterssection', get_string('parametersheader', 'url'));
-        $mform->addElement('static', 'parametersinfo', '', get_string('parametersheader_help', 'url'));
-
-        if (empty($this->current->parameters)) {
-            $parcount = 5;
-        } else {
-            $parcount = 5 + count((array) unserialize_array($this->current->parameters));
-            $parcount = ($parcount > 100) ? 100 : $parcount;
-        }
-        $options = url_get_variable_options($config);
-
-        for ($i=0; $i < $parcount; $i++) {
-            $parameter = "parameter_$i";
-            $variable  = "variable_$i";
-            $pargroup = "pargoup_$i";
-            $group = array(
-                $mform->createElement('text', $parameter, '', array('size'=>'12')),
-                $mform->createElement('selectgroups', $variable, '', $options),
-            );
-            $mform->addGroup($group, $pargroup, get_string('parameterinfo', 'url'), ' ', false);
-            $mform->setType($parameter, PARAM_RAW);
-        }
-
-        //-------------------------------------------------------
         $this->standard_coursemodule_elements();
-
-        //-------------------------------------------------------
         $this->add_action_buttons();
     }
 
