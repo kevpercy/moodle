@@ -56,7 +56,6 @@ class grading_actionmenu implements templatable, renderable {
         $this->cmid = $cmid;
         $this->submissionpluginenabled = $submissionpluginenabled;
         $this->submissioncount = $submissioncount;
-
     }
 
     /**
@@ -77,8 +76,20 @@ class grading_actionmenu implements templatable, renderable {
             )->out(false);
         }
 
+        // TODO: Use the table parameters, not the URL
+        $firstinitial = optional_param('tifirst', '', PARAM_ALPHA);
+        $lastinitial = optional_param('tilast', '', PARAM_ALPHA);
+        $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
+
+        $initialselector = new \core_course\output\actionbar\initial_selector(
+            $course, 'mod/assign/view.php', $firstinitial, $lastinitial,
+            'tifirst', 'tilast', $additionalparams
+        );
+
+        $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
+        $data['initialselector'] = $actionbarrenderer->render($initialselector);
+
         if ($course->groupmode) {
-            $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
             $data['groupselector'] = $actionbarrenderer->render(new \core_course\output\actionbar\group_selector($course));
         }
 
