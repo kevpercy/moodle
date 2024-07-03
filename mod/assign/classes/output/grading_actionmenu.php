@@ -24,6 +24,7 @@
 
 namespace mod_assign\output;
 
+use context_module;
 use templatable;
 use renderable;
 use moodle_url;
@@ -43,8 +44,6 @@ class grading_actionmenu implements templatable, renderable {
     protected $submissionpluginenabled;
     /** @var int The number of submissions made. */
     protected $submissioncount;
-    /** @var mixed|null The context where this menu is located. */
-    protected $context;
 
 
     /**
@@ -54,11 +53,10 @@ class grading_actionmenu implements templatable, renderable {
      * @param bool $submissionpluginenabled If any submission plugins are enabled.
      * @param int $submissioncount The number of submissions made.
      */
-    public function __construct(int $cmid, bool $submissionpluginenabled = false, int $submissioncount = 0, $context = null) {
+    public function __construct(int $cmid, bool $submissionpluginenabled = false, int $submissioncount = 0) {
         $this->cmid = $cmid;
         $this->submissionpluginenabled = $submissionpluginenabled;
         $this->submissioncount = $submissioncount;
-        $this->context = $context;
     }
 
     /**
@@ -73,13 +71,15 @@ class grading_actionmenu implements templatable, renderable {
         $course = $PAGE->course;
         $data = [];
 
+        $context = context_module::instance($this->cmid);
+
         if ($this->submissionpluginenabled && $this->submissioncount) {
             $data['downloadall'] = (
                 new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'downloadall'])
             )->out(false);
         }
 
-        $userpreferencekey = "flextable_mod_assign_grading-{$this->context->id}";
+        $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
         $prefs = json_decode(get_user_preferences($userpreferencekey, false), true);
         $ifirst = $prefs['i_first'] ?? '';
         $ilast = $prefs['i_last'] ?? '';
