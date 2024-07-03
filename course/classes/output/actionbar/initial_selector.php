@@ -104,7 +104,7 @@ class initial_selector extends comboboxsearch {
         $renderer = $PAGE->get_renderer('core_user');
         $initialsbar = $renderer->partial_user_search($slug, $firstinitial, $lastinitial, true);
 
-        $PAGE->requires->js_call_amd('core_grades/searchwidget/initials', 'init',
+        $PAGE->requires->js_call_amd('core_course/actionbar/initials', 'init',
             [$slug, $userid, $searchvalue, $firstinitialparam, $lastinitialparam, $additionalparams]);
 
         $formdata = (object) [

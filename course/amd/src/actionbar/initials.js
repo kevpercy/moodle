@@ -14,13 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A small dropdown to filter users within the gradebook.
+ * A small dropdown to filter users.
  *
- * @module    core_grades/searchwidget/initials
+ * @module    core_course/actionbar/initials
  * @copyright 2022 Mathew May <mathew.solutions>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @deprecated since Moodle 4.5 - please use core_course/actionbar/initials instead.
- * @todo       Final deprecation in Moodle 6.0. See MDL-.
  */
 
 import Pending from 'core/pending';
