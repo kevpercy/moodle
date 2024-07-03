@@ -17,10 +17,7 @@
 namespace core_course\output\actionbar;
 
 use core\output\comboboxsearch;
-use renderable;
-use renderer_base;
 use stdClass;
-use templatable;
 
 /**
  * Renderable class for the group selector element in the action bar.
@@ -29,42 +26,7 @@ use templatable;
  * @copyright  2024 Shamim Rezaie <shamim@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class initial_selector implements renderable, templatable {
-
-    /**
-     * @var stdClass The course object.
-     */
-    protected $course;
-
-    /**
-     * @var string The URL of the page to filter.
-     */
-    protected $slug;
-
-    /**
-     * @var array Additional parameters to add to the URL.
-     */
-    protected $additionalparams;
-
-    /**
-     * @var string The selected initial for the first name.
-     */
-    protected $firstinitial;
-
-    /**
-     * @var string The parameter name for the first name initial.
-     */
-    protected $firstinitialparam;
-
-    /**
-     * @var string The selected initial for the last name.
-     */
-    protected $lastinitial;
-
-    /**
-     * @var string The parameter name for the last name initial.
-     */
-    protected $lastinitialparam;
+class initial_selector extends comboboxsearch {
 
     /**
      * The class constructor.
@@ -79,24 +41,60 @@ class initial_selector implements renderable, templatable {
      */
     public function __construct(stdClass $course, string $slug, string $firstinitial = '', string $lastinitial = '',
             string $firstinitialparam = 'sifirst', string $lastinitialparam = 'silast', array $additionalparams = []) {
-        $this->course = $course;
-        $this->slug = $slug;
-        $this->firstinitial = $firstinitial;
-        $this->lastinitial = $lastinitial;
-        $this->additionalparams = $additionalparams;
+        $initialselectorcontent = $this->initial_selector_output($course, $slug, $firstinitial, $lastinitial,
+            $firstinitialparam, $lastinitialparam, $additionalparams);
 
-        // Defaults to sifirst/silast, but flextable uses tifirst/tilast, for example.
-        $this->firstinitialparam = $firstinitialparam;
-        $this->lastinitialparam = $lastinitialparam;
+        $currentfilteroutput = $this->current_filter_output($firstinitial, $lastinitial);
+
+        parent::__construct(
+            false,
+            $currentfilteroutput !== '' ? $currentfilteroutput : get_string('filterbyname', 'core_grades'),
+            $initialselectorcontent,
+            'initials-selector',
+            'initialswidget',
+            'initialsdropdown',
+            $currentfilteroutput !== '' ? get_string('name') : null,
+            true,
+            get_string('filterbyname', 'core_grades'),
+            'nameinitials',
+            json_encode([
+                'first' => $firstinitial,
+                'last' => $lastinitial,
+            ])
+        );
     }
 
     /**
-     * Export the data for the mustache template.
+     * Method to generate the current filter information for the initial selector label.
      *
-     * @param renderer_base $output The renderer that will be used to render the output.
-     * @return array
+     * @param $firstinitial string The selected first initial.
+     * @param $lastinitial string The selected last initial.
      */
-    public function export_for_template(renderer_base $output) {
+    public function current_filter_output(string $firstinitial, string $lastinitial) {
+        if ($firstinitial !== '' && $lastinitial !== '') {
+            return get_string('filterbothactive', 'grades', ['first' => $firstinitial, 'last' => $lastinitial]);
+        } else if ($firstinitial !== '') {
+            return get_string('filterfirstactive', 'grades', ['first' => $firstinitial]);
+        } else if ($lastinitial !== '') {
+            return get_string('filterlastactive', 'grades', ['last' => $lastinitial]);
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * Method to generate the output for the initial selector.
+     *
+     * @param stdClass $course The course object.
+     * @param string $slug The base URL to send the form to.
+     * @param string $firstinitial The selected first initial.
+     * @param string $lastinitial The selected last initial.
+     * @param string $firstinitialparam The parameter name for the first initial.
+     * @param string $lastinitialparam The parameter name for the last initial.
+     * @param array $additionalparams Any additional parameters required for the form submission URL.
+     */
+    public function initial_selector_output(stdClass $course, string $slug, string $firstinitial = '', string $lastinitial = '',
+            string $firstinitialparam = 'sifirst', string $lastinitialparam = 'silast', array $additionalparams = []) {
         global $OUTPUT, $PAGE;
 
         // User search.
@@ -104,52 +102,15 @@ class initial_selector implements renderable, templatable {
         $userid = optional_param('gpr_userid', null, PARAM_INT);
 
         $renderer = $PAGE->get_renderer('core_user');
-        $initialsbar = $renderer->partial_user_search($this->slug, $this->firstinitial, $this->lastinitial, true);
-
-        $currentfilter = '';
-        if ($this->firstinitial !== '' && $this->lastinitial !== '') {
-            $currentfilter = get_string('filterbothactive', 'grades', ['first' => $this->firstinitial, 'last' => $this->lastinitial]);
-        } else if ($this->firstinitial !== '') {
-            $currentfilter = get_string('filterfirstactive', 'grades', ['first' => $this->firstinitial]);
-        } else if ($this->lastinitial !== '') {
-            $currentfilter = get_string('filterlastactive', 'grades', ['last' => $this->lastinitial]);
-        }
+        $initialsbar = $renderer->partial_user_search($slug, $firstinitial, $lastinitial, true);
 
         $PAGE->requires->js_call_amd('core_grades/searchwidget/initials', 'init',
-            [$this->slug, $userid, $searchvalue, $this->firstinitialparam, $this->lastinitialparam, $this->additionalparams]);
+            [$slug, $userid, $searchvalue, $firstinitialparam, $lastinitialparam, $additionalparams]);
 
         $formdata = (object) [
-            'courseid' => $this->course->id,
+            'courseid' => $course->id,
             'initialsbars' => $initialsbar,
         ];
-        $dropdowncontent = $OUTPUT->render_from_template('core_grades/initials_dropdown_form', $formdata);
-
-        $initialselector = new comboboxsearch(
-            false,
-            $currentfilter !== '' ? $currentfilter : get_string('filterbyname', 'core_grades'),
-            $dropdowncontent,
-            'initials-selector',
-            'initialswidget',
-            'initialsdropdown',
-            $currentfilter !== '' ? get_string('name') : null,
-            true,
-            get_string('filterbyname', 'core_grades'),
-            'nameinitials',
-            json_encode([
-                'first' => $this->firstinitial,
-                'last' => $this->lastinitial,
-            ])
-        );
-
-        return $initialselector->export_for_template($OUTPUT);
-    }
-
-    /**
-     * Returns the template for the group selector.
-     *
-     * @return string
-     */
-    public function get_template(): string {
-        return 'core/comboboxsearch';
+        return $OUTPUT->render_from_template('core_grades/initials_dropdown_form', $formdata);
     }
 }
