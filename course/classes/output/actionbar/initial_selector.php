@@ -70,22 +70,24 @@ class initial_selector implements renderable, templatable {
      * The class constructor.
      *
      * @param stdClass $course The course object.
-     * @param string $slug
-     * @param string $firstinitial
-     * @param string $lastinitial
-     * @param string $firstinitialparam
-     * @param string $lastinitialparam
-     * @param array $additionalparams
+     * @param string $slug The base URL to send the form to.
+     * @param string $firstinitial The selected first initial.
+     * @param string $lastinitial The selected last initial.
+     * @param string $firstinitialparam The parameter name for the first initial.
+     * @param string $lastinitialparam The parameter name for the last initial.
+     * @param array $additionalparams Any additional parameters required for the form submission URL.
      */
     public function __construct(stdClass $course, string $slug, string $firstinitial = '', string $lastinitial = '',
             string $firstinitialparam = 'sifirst', string $lastinitialparam = 'silast', array $additionalparams = []) {
         $this->course = $course;
         $this->slug = $slug;
-        $this->additionalparams = $additionalparams;
-        $this->firstinitialparam = $firstinitialparam;
         $this->firstinitial = $firstinitial;
-        $this->lastinitialparam = $lastinitialparam;
         $this->lastinitial = $lastinitial;
+        $this->additionalparams = $additionalparams;
+
+        // Defaults to sifirst/silast, but flextable uses tifirst/tilast, for example.
+        $this->firstinitialparam = $firstinitialparam;
+        $this->lastinitialparam = $lastinitialparam;
     }
 
     /**
@@ -113,7 +115,8 @@ class initial_selector implements renderable, templatable {
             $currentfilter = get_string('filterlastactive', 'grades', ['last' => $this->lastinitial]);
         }
 
-        $PAGE->requires->js_call_amd('core_grades/searchwidget/initials', 'init', [$this->slug, $userid, $searchvalue, $this->firstinitialparam, $this->lastinitialparam, $this->additionalparams]);
+        $PAGE->requires->js_call_amd('core_grades/searchwidget/initials', 'init',
+            [$this->slug, $userid, $searchvalue, $this->firstinitialparam, $this->lastinitialparam, $this->additionalparams]);
 
         $formdata = (object) [
             'courseid' => $this->course->id,

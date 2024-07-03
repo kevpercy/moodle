@@ -43,6 +43,8 @@ class grading_actionmenu implements templatable, renderable {
     protected $submissionpluginenabled;
     /** @var int The number of submissions made. */
     protected $submissioncount;
+    /** @var mixed|null The context where this menu is located. */
+    protected $context;
 
 
     /**
@@ -52,10 +54,11 @@ class grading_actionmenu implements templatable, renderable {
      * @param bool $submissionpluginenabled If any submission plugins are enabled.
      * @param int $submissioncount The number of submissions made.
      */
-    public function __construct(int $cmid, bool $submissionpluginenabled = false, int $submissioncount = 0) {
+    public function __construct(int $cmid, bool $submissionpluginenabled = false, int $submissioncount = 0, $context = null) {
         $this->cmid = $cmid;
         $this->submissionpluginenabled = $submissionpluginenabled;
         $this->submissioncount = $submissioncount;
+        $this->context = $context;
     }
 
     /**
@@ -76,13 +79,14 @@ class grading_actionmenu implements templatable, renderable {
             )->out(false);
         }
 
-        // TODO: Use the table parameters, not the URL
-        $firstinitial = optional_param('tifirst', '', PARAM_ALPHA);
-        $lastinitial = optional_param('tilast', '', PARAM_ALPHA);
+        $userpreferencekey = "flextable_mod_assign_grading-{$this->context->id}";
+        $prefs = json_decode(get_user_preferences($userpreferencekey, false), true);
+        $ifirst = $prefs['i_first'] ?? '';
+        $ilast = $prefs['i_last'] ?? '';
         $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
 
         $initialselector = new \core_course\output\actionbar\initial_selector(
-            $course, 'mod/assign/view.php', $firstinitial, $lastinitial,
+            $course, 'mod/assign/view.php', $ifirst, $ilast,
             'tifirst', 'tilast', $additionalparams
         );
 
