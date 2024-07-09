@@ -47,7 +47,9 @@ Feature: In an assignment, teachers can use table preferences.
     When I log in as "teacher1"
     And I am on the "Test assignment" Activity page
     And I follow "View all submissions"
-    And I click on "T" "link" in the ".lastinitial" "css_element"
+    And I click on "Filter by name" "combobox"
+    And I select "T" in the "Last name" "core_course > initials bar"
+    And I press "Apply"
     And I change window size to "large"
     And I click on "Grade" "link" in the "Student Two" "table_row"
     And I change window size to "medium"
