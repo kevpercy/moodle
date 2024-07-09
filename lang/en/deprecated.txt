@@ -124,3 +124,7 @@ registrationcontactyes,core
 error:duplicatename,core_badges
 error:cannotact,core_badges
 reviewbadge,core_badges
+filterbothactive,core_grades
+filterbyname,core_grades
+filterfirstactive,core_grades
+filterlastactive,core_grades
