@@ -24,6 +24,7 @@
 
 namespace mod_assign\output;
 
+use context_module;
 use templatable;
 use renderable;
 use moodle_url;
@@ -71,14 +72,29 @@ class grading_actionmenu implements templatable, renderable {
         $course = $PAGE->course;
         $data = [];
 
+        $context = context_module::instance($this->cmid);
+
         if ($this->submissionpluginenabled && $this->submissioncount) {
             $data['downloadall'] = (
                 new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'downloadall'])
             )->out(false);
         }
 
+        $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
+        $prefs = json_decode(get_user_preferences($userpreferencekey, false), true);
+        $ifirst = $prefs['i_first'] ?? '';
+        $ilast = $prefs['i_last'] ?? '';
+        $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
+
+        $initialselector = new \core_course\output\actionbar\initial_selector(
+            $course, 'mod/assign/view.php', $ifirst, $ilast,
+            'tifirst', 'tilast', $additionalparams
+        );
+
+        $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
+        $data['initialselector'] = $actionbarrenderer->render($initialselector);
+
         if ($course->groupmode) {
-            $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
             $data['groupselector'] = $actionbarrenderer->render(new \core_course\output\actionbar\group_selector($course));
         }
 

@@ -82,37 +82,30 @@ class action_bar extends \core_grades\output\action_bar {
         // and the view mode selector (if applicable).
         if (has_capability('moodle/grade:viewall', $this->context)) {
             $course = get_course($courseid);
-            $gradesrenderer = $PAGE->get_renderer('core_grades');
-
-            $initialscontent = $gradesrenderer->initials_selector(
-                $course,
-                $this->context,
-                '/grade/report/grader/index.php'
-            );
 
             $firstnameinitial = $SESSION->gradereport["filterfirstname-{$this->context->id}"] ?? '';
             $lastnameinitial  = $SESSION->gradereport["filtersurname-{$this->context->id}"] ?? '';
+            $additionalparams = [];
 
-            $initialselector = new comboboxsearch(
-                false,
-                $initialscontent->buttoncontent,
-                $initialscontent->dropdowncontent,
-                'initials-selector',
-                'initialswidget',
-                'initialsdropdown',
-                $initialscontent->buttonheader,
-                true,
-                get_string('filterbyname', 'core_grades'),
-                'nameinitials',
-                json_encode([
-                    'first' => $firstnameinitial,
-                    'last' => $lastnameinitial,
-                ])
+            if ($gpr_search = optional_param('gpr_search', null, PARAM_NOTAGS)) {
+                $additionalparams['gpr_search'] = $gpr_search;
+            }
+
+            if ($gpr_userid = optional_param('gpr_userid', null, PARAM_INT)) {
+                $additionalparams['gpr_userid'] = $gpr_userid;
+            }
+
+            $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
+            $initialselector = new \core_course\output\actionbar\initial_selector(
+                course: $course,
+                targeturl: '/grade/report/grader/index.php',
+                firstinitial: $firstnameinitial,
+                lastinitial: $lastnameinitial,
+                additionalparams: $additionalparams,
             );
-            $data['initialselector'] = $initialselector->export_for_template($output);
+            $data['initialselector'] = $actionbarrenderer->render($initialselector);
 
             if ($course->groupmode) {
-                $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');
                 $data['groupselector'] = $actionbarrenderer->render(new \core_course\output\actionbar\group_selector($course));
             }
 
