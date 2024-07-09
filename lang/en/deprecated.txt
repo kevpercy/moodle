@@ -127,3 +127,7 @@ reviewbadge,core_badges
 myisamproblem,core_error
 newpasswordtext,core
 cannotsetpassword,core_error
+filterbothactive,core_grades
+filterbyname,core_grades
+filterfirstactive,core_grades
+filterlastactive,core_grades
