@@ -1148,7 +1148,7 @@ class renderer extends \plugin_renderer_base {
                                                      'assignfeedback_' . $plugin);
             }
         }
-        $o .= $this->flexible_table($table, $table->get_rows_per_page(), true);
+        $o .= $this->flexible_table($table, $table->get_rows_per_page(), false);
         $o .= $this->output->box_end();
 
         return $o;

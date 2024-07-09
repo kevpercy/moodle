@@ -4590,7 +4590,37 @@ class assign {
         $gradingoptionsdata->markerfilter = $markerfilter;
         $gradingoptionsform->set_data($gradingoptionsdata);
 
-        $buttons = new \mod_assign\output\grading_actionmenu(cmid: $this->get_course_module()->id, assign: $this);
+        // Load the table of submissions, to be printed further down.
+        // This initialises the selected first/last initials for the action menu.
+        if ($showquickgrading && $quickgrading) {
+            $gradingtable = new assign_grading_table($this, $perpage, $filter, 0, true);
+            $gradingtable->responsive = false;
+            $table = $this->get_renderer()->render($gradingtable);
+            $page = optional_param('page', null, PARAM_INT);
+            $quickformparams = [
+                'cm' => $this->get_course_module()->id,
+                'gradingtable' => $table,
+                'sendstudentnotifications' => $this->get_instance()->sendstudentnotifications,
+                'page' => $page,
+            ];
+            $quickgradingform = new mod_assign_quick_grading_form(null, $quickformparams);
+
+            $gradingtableoutput = $this->get_renderer()->render(new assign_form('quickgradingform', $quickgradingform));
+        } else {
+            $gradingtable = new assign_grading_table($this, $perpage, $filter, 0, false);
+            $gradingtable->responsive = false;
+            $gradingtableoutput = $this->get_renderer()->render($gradingtable);
+        }
+
+        $gradingtable->initialbars(true);
+        $buttons = new \mod_assign\output\grading_actionmenu(
+            cmid: $this->get_course_module()->id,
+            assign: $this,
+            userinitials: [
+                'firstname' => $gradingtable->get_initial_first(),
+                'lastname' => $gradingtable->get_initial_last(),
+            ]
+        );
         $actionformtext = $this->get_renderer()->render($buttons);
         $currenturl = new moodle_url('/mod/assign/view.php', ['id' => $this->get_course_module()->id, 'action' => 'grading']);
         $PAGE->activityheader->set_attrs(['hidecompletion' => true]);
@@ -4618,24 +4648,8 @@ class assign {
             $o .= $this->get_renderer()->notification(get_string('blindmarkingenabledwarning', 'assign'), 'notifymessage');
         }
 
-        // Load and print the table of submissions.
-        if ($showquickgrading && $quickgrading) {
-            $gradingtable = new assign_grading_table($this, $perpage, $filter, 0, true);
-            $gradingtable->responsive = false;
-            $table = $this->get_renderer()->render($gradingtable);
-            $page = optional_param('page', null, PARAM_INT);
-            $quickformparams = array('cm'=>$this->get_course_module()->id,
-                                     'gradingtable'=>$table,
-                                     'sendstudentnotifications' => $this->get_instance()->sendstudentnotifications,
-                                     'page' => $page);
-            $quickgradingform = new mod_assign_quick_grading_form(null, $quickformparams);
-
-            $o .= $this->get_renderer()->render(new assign_form('quickgradingform', $quickgradingform));
-        } else {
-            $gradingtable = new assign_grading_table($this, $perpage, $filter, 0, false);
-            $gradingtable->responsive = false;
-            $o .= $this->get_renderer()->render($gradingtable);
-        }
+        // Print the table of submissions.
+        $o .= $gradingtableoutput;
 
         if ($this->can_grade()) {
             // We need to store the order of uses in the table as the person may wish to grade them.
