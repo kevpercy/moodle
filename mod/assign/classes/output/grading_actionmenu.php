@@ -100,6 +100,19 @@ class grading_actionmenu implements templatable, renderable {
         );
         $data['userselector'] = $actionbarrenderer->render($userselector);
 
+        $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
+        $prefs = json_decode(get_user_preferences($userpreferencekey, false), true);
+        $ifirst = $prefs['i_first'] ?? '';
+        $ilast = $prefs['i_last'] ?? '';
+        $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
+
+        $initialselector = new \core_course\output\actionbar\initial_selector(
+            $course, 'mod/assign/view.php', $ifirst, $ilast,
+            'tifirst', 'tilast', $additionalparams
+        );
+
+        $data['initialselector'] = $actionbarrenderer->render($initialselector);
+
         if ($course->groupmode) {
             $data['groupselector'] = $actionbarrenderer->render(new \core_course\output\actionbar\group_selector($course));
         }
