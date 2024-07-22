@@ -84,9 +84,10 @@ class grading_actionmenu implements templatable, renderable {
         $data = [];
 
         $userid = optional_param('userid', null, PARAM_INT);
+        $searchparam = optional_param('search', '', PARAM_NOTAGS);
         // If the user ID is set, it indicates that a user has been selected. In this case, override the user search
         // string with the full name of the selected user.
-        $usersearch = $userid ? fullname(\core_user::get_user($userid)) : optional_param('search', '', PARAM_NOTAGS);
+        $usersearch = $userid ? fullname(\core_user::get_user($userid)) : $searchparam;
 
         $resetlink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'grading']);
         $groupid = groups_get_course_group($course, true);
@@ -101,14 +102,25 @@ class grading_actionmenu implements templatable, renderable {
         $data['userselector'] = $actionbarrenderer->render($userselector);
 
         $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
-        $prefs = json_decode(get_user_preferences($userpreferencekey, false), true);
-        $ifirst = $prefs['i_first'] ?? '';
-        $ilast = $prefs['i_last'] ?? '';
+        $userpreferences = json_decode(get_user_preferences($userpreferencekey, false), true);
         $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
 
+        if (!empty($userid)) {
+            $additionalparams['userid'] = $userid;
+        }
+
+        if (!empty($searchparam)) {
+            $additionalparams['search'] = $searchparam;
+        }
+
         $initialselector = new \core_course\output\actionbar\initial_selector(
-            $course, 'mod/assign/view.php', $ifirst, $ilast,
-            'tifirst', 'tilast', $additionalparams
+            course: $course,
+            targeturl: 'mod/assign/view.php',
+            firstinitial: $userpreferences['i_first'] ?? '',
+            lastinitial: $userpreferences['i_last'] ?? '',
+            firstinitialparam: 'tifirst',
+            lastinitialparam: 'tilast',
+            additionalparams: $additionalparams
         );
 
         $data['initialselector'] = $actionbarrenderer->render($initialselector);
