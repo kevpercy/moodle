@@ -45,6 +45,8 @@ class grading_actionmenu implements templatable, renderable {
     protected $submissionpluginenabled;
     /** @var int The number of submissions made. */
     protected $submissioncount;
+    /** @var array Preferences for the grading table. */
+    protected $tablepreferences;
 
 
     /**
@@ -53,12 +55,14 @@ class grading_actionmenu implements templatable, renderable {
      * @param int $cmid Course module ID.
      * @param bool $submissionpluginenabled If any submission plugins are enabled.
      * @param int $submissioncount The number of submissions made.
+     * @param array $tablepreferences The preferences for the grading table.
      */
-    public function __construct(int $cmid, bool $submissionpluginenabled = false, int $submissioncount = 0) {
+    public function __construct(int $cmid, bool $submissionpluginenabled = false,
+            int $submissioncount = 0, array $tablepreferences = []) {
         $this->cmid = $cmid;
         $this->submissionpluginenabled = $submissionpluginenabled;
         $this->submissioncount = $submissioncount;
-
+        $this->tablepreferences = $tablepreferences;
     }
 
     /**
@@ -102,8 +106,6 @@ class grading_actionmenu implements templatable, renderable {
         );
         $data['userselector'] = $actionbarrenderer->render($userselector);
 
-        $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
-        $userpreferences = json_decode(get_user_preferences($userpreferencekey, false), true);
         $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
 
         if (!empty($userid)) {
@@ -117,8 +119,8 @@ class grading_actionmenu implements templatable, renderable {
         $initialselector = new \core_course\output\actionbar\initial_selector(
             course: $course,
             targeturl: 'mod/assign/view.php',
-            firstinitial: $userpreferences['i_first'] ?? '',
-            lastinitial: $userpreferences['i_last'] ?? '',
+            firstinitial: $this->tablepreferences['i_first'] ?? '',
+            lastinitial: $this->tablepreferences['i_last'] ?? '',
             firstinitialparam: 'tifirst',
             lastinitialparam: 'tilast',
             additionalparams: $additionalparams
