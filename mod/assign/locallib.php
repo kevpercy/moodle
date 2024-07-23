@@ -4588,7 +4588,7 @@ class assign {
             $gradingtableoutput = $this->get_renderer()->render($gradingtable);
         }
 
-        $buttons = new \mod_assign\output\grading_actionmenu(cmid: $this->get_course_module()->id, assign: $this);
+        $buttons = new \mod_assign\output\grading_actionmenu(cmid: $this->get_course_module()->id, assign: $this, tablepreferences: $gradingtable->get_preferences());
         $actionformtext = $this->get_renderer()->render($buttons);
         $currenturl = new moodle_url('/mod/assign/view.php', ['id' => $this->get_course_module()->id, 'action' => 'grading']);
         $PAGE->activityheader->set_attrs(['hidecompletion' => true]);

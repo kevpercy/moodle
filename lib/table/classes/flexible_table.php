@@ -1578,6 +1578,15 @@ class flexible_table {
     }
 
     /**
+     * Gets the preferences array for the table (sortby, i_first, i_last etc.).
+     *
+     * @return array
+     */
+    public function get_preferences(): array {
+        return $this->prefs;
+    }
+
+    /**
      * Set the preferred table sorting attributes.
      *
      * @param string $sortby The field to sort by.
