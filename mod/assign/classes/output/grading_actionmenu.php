@@ -48,6 +48,8 @@ class grading_actionmenu implements templatable, renderable {
     protected int $submissioncount;
     /** @var assign The assign instance. */
     protected assign $assign;
+    /** @var array Preferences for the grading table. */
+    protected array $tablepreferences;
 
     /**
      * Constructor for this object.
@@ -61,7 +63,8 @@ class grading_actionmenu implements templatable, renderable {
         int $cmid,
         ?bool $submissionpluginenabled = null,
         ?int $submissioncount = null,
-        assign $assign = null
+        assign $assign = null,
+        array $tablepreferences = []
     ) {
         $this->cmid = $cmid;
         if (!$assign) {
@@ -69,6 +72,7 @@ class grading_actionmenu implements templatable, renderable {
             $assign = new assign($context, null, null);
         }
         $this->assign = $assign;
+        $this->tablepreferences = $tablepreferences;
     }
 
     /**
@@ -104,8 +108,7 @@ class grading_actionmenu implements templatable, renderable {
         );
         $data['userselector'] = $actionbarrenderer->render($userselector);
 
-        $userpreferencekey = "flextable_mod_assign_grading-{$context->id}";
-        $userpreferences = json_decode(get_user_preferences($userpreferencekey, false), true);
+        $hasinitials = !empty($this->tablepreferences['i_first']) || !empty($this->tablepreferences['i_last']);
         $additionalparams = ['action' => 'grading', 'id' => $this->cmid];
 
         if (!empty($userid)) {
@@ -119,8 +122,8 @@ class grading_actionmenu implements templatable, renderable {
         $initialselector = new \core_course\output\actionbar\initial_selector(
             course: $course,
             targeturl: 'mod/assign/view.php',
-            firstinitial: $userpreferences['i_first'] ?? '',
-            lastinitial: $userpreferences['i_last'] ?? '',
+            firstinitial: $this->tablepreferences['i_first'] ?? '',
+            lastinitial: $this->tablepreferences['i_last'] ?? '',
             firstinitialparam: 'tifirst',
             lastinitialparam: 'tilast',
             additionalparams: $additionalparams
@@ -138,12 +141,14 @@ class grading_actionmenu implements templatable, renderable {
             $data['extrafiltersdropdown'] = $OUTPUT->render($extrafiltersdropdown);
         }
 
-        if (groups_get_activity_group($cm) || $this->get_applied_extra_filters_count() > 0) {
+        if (groups_get_activity_group($cm) || $this->get_applied_extra_filters_count() > 0 || $hasinitials) {
             $url = new moodle_url('/mod/assign/view.php', [
                 'id' => $this->cmid,
                 'action' => 'grading',
                 'group' => 0,
                 'workflowfilter' => '',
+                'tifirst' => '',
+                'tilast' => '',
             ]);
             $data['pagereset'] = $url->out(false);
         }
