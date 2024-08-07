@@ -298,6 +298,31 @@
     white-space: nowrap;
 }
 
+.path-mod-assign .gradingtable .status {
+    justify-content: space-between;
+    padding: 10px; /* Optional: Add padding for spacing */
+    white-space: nowrap;
+    align-items: center;
+}
+
+.path-mod-assign .gradingtable .submissionstatus {
+    white-space: nowrap;
+}
+
+.path-mod-assign .gradingtable .grade {
+    white-space: nowrap;
+}
+
+.submissionstatustext {
+    margin-right: auto;
+    padding-top: 6px;
+}
+
+.gradetext {
+    margin-right: auto;
+    padding-top: 6px;
+}
+
 .path-mod-assign .gradingtable .moodle-actionmenu[data-enhanced].show .menu a {
     padding-left: 12px;
     padding-right: 12px;
