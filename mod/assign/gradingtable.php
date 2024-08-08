@@ -991,7 +991,6 @@ class assign_grading_table extends table_sql implements renderable {
      */
     public function col_grade(stdClass $row): string {
         $o = '';
-        $link = '';
         $separator = $this->output->spacer(array(), true);
         $grade = '';
         $gradingdisabled = $this->assignment->grading_disabled($row->id, true, $this->gradinginfo);
@@ -1016,8 +1015,6 @@ class assign_grading_table extends table_sql implements renderable {
                 $urlparams['userid'] = $row->userid;
             }
             $url = new moodle_url('/mod/assign/view.php', $urlparams);
-            $link = '<a href="' . $url . '" class="btn btn-primary">' . get_string('gradeverb') . '</a>';
-            $grade .= $link . $separator;
 
             $gradetext = $this->display_grade($row->grade, $this->quickgrading && !$gradingdisabled, $row->userid, $row->timemarked);
             $gradetext = '<div class="gradetext">' . $gradetext . '</div>';
