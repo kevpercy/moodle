@@ -34,7 +34,8 @@ Feature: Display feedback on the Grader report
       | Grade item 1           | student1 |       | Longer feedback text content |
     And I am on the "Test assignment name 1" "assign activity" page logged in as teacher1
     And I follow "View all submissions"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I set the following fields to these values:
       | Grade out of 100  | 50               |
       | Feedback comments | This is feedback |

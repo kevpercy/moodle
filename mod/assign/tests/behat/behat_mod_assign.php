@@ -37,6 +37,20 @@ use Behat\Gherkin\Node\TableNode;
 class behat_mod_assign extends behat_base {
 
     /**
+     * Return the list of partial named selectors.
+     *
+     * @return array
+     */
+    public static function get_partial_named_selectors(): array {
+        return [
+            new behat_component_named_selector(
+                'context menu',
+                ["//td[count(//thead//th[contains(., %locator%)]/preceding-sibling::th)]/following-sibling::td//a[@role='button'][@aria-haspopup='true']"]
+            ),
+        ];
+    }
+
+    /**
      * Check that the marking guide information is displayed correctly.
      *
      * @Then /^I should see the marking guide information displayed as:$/

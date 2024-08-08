@@ -96,10 +96,12 @@ class behat_grading extends behat_base {
         $this->execute('behat_general::i_click_on_in_the',
                        array(
                            $this->escape($gradetext),
-                           'link',
+                           'mod_assign > context menu',
                            $this->escape($userfullname),
                            'table_row'
                        ));
+
+        $this->execute('behat_action_menu::i_choose_in_the_open_action_menu', $gradetext);
     }
 
     /**

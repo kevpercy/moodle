@@ -33,7 +33,8 @@ Feature: In an assignment, teachers can filter displayed submissions by assigned
       | markingallocation                   | 1                       |
     And I am on the "Test assignment name" Activity page logged in as teacher1
     And I follow "View all submissions"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I set the field "allocatedmarker" to "Marker 1"
     And I set the field "Notify student" to "0"
     And I press "Save changes"

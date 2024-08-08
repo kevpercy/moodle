@@ -48,7 +48,7 @@ Feature: Locking Grade Items and Categories in Gradebook
     And I turn editing mode on
     And I change window size to "large"
     When I click on "Manual grade 1" "core_grades > grade_actions" in the "Student 1" "table_row"
-    And I choose "Edit grade" in the open action menu
+    And I choose "Grade" in the open action menu
     And I set the field "Locked" to "1"
     And I press "Save changes"
     And I click on grade item menu "Manual grade 1" of type "gradeitem" on "grader" page

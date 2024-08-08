@@ -36,7 +36,8 @@ Feature: In an assignment, teachers can change filters in the grading app
   Scenario: Set filters in the grading table and see them in the grading app
     Given I am on the "Test assignment name &" Activity page logged in as teacher1
     And I follow "View all submissions"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I should not see "Course 1 &amp;"
     And the "title" attribute of "a[title='Course: Course 1 &']" "css_element" should not contain "&amp;"
     And I should not see "Test assignment name &amp;"
@@ -51,7 +52,8 @@ Feature: In an assignment, teachers can change filters in the grading app
     And I set the field "markerfilter" to "Marker 1"
     And I set the field "workflowfilter" to "In marking"
     And I change window size to "large"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I change window size to "medium"
     Then the field "filter" matches value "Not submitted"
     And the field "markerfilter" matches value "Marker 1"
@@ -61,7 +63,8 @@ Feature: In an assignment, teachers can change filters in the grading app
   Scenario: Set filters in the grading app and see them in the grading table
     Given I am on the "Test assignment name &" Activity page logged in as teacher1
     And I follow "View all submissions"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I set the field "allocatedmarker" to "Marker 1"
     And I set the field "workflowstate" to "In marking"
     And I set the field "Notify student" to "0"
@@ -69,7 +72,8 @@ Feature: In an assignment, teachers can change filters in the grading app
 
     And I am on the "Test assignment name &" Activity page
     And I follow "View all submissions"
-    And I click on "Grade" "link" in the "Student 1" "table_row"
+    And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
+    And I choose "Grade" in the open action menu
     And I click on "[data-region=user-filters]" "css_element"
     And I set the field "filter" to "Not submitted"
     And I set the field "markerfilter" to "Marker 1"
