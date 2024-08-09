@@ -58,7 +58,7 @@ Feature: Regrading grades does not unnecessarily mark some as overriden
     Given I am on the "Assignment 1" "assign activity" page
     And I follow "View all submissions"
     And I click on "Grade" "mod_assign > context menu" in the "Student 1" "table_row"
-    And I choose "Go to grader" in the open action menu
+    And I choose "Edit grade" in the open action menu
     And I set the field "Grade out of 100" to "90"
     And I press "Save and show next"
     And I set the field "Grade out of 100" to "70"
