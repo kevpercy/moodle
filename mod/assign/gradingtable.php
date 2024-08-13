@@ -1693,6 +1693,15 @@ class assign_grading_table extends table_sql implements renderable {
     }
 
     /**
+     * Gets the preferences array for the table (sortby, i_first, i_last etc.).
+     *
+     * @return array
+     */
+    public function get_preferences(): array {
+        return $this->prefs;
+    }
+
+    /**
      * Overides setup to ensure it will only run a single time.
      */
     public function setup() {

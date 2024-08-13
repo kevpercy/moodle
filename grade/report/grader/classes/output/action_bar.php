@@ -87,12 +87,10 @@ class action_bar extends \core_grades\output\action_bar {
             $lastnameinitial  = $SESSION->gradereport["filtersurname-{$this->context->id}"] ?? '';
             $additionalparams = [];
 
-            if (!empty($this->usersearch)) {
-                $additionalparams['gpr_search'] = $this->usersearch;
-            }
-
             if ($this->userid > 0) {
                 $additionalparams['gpr_userid'] = $this->userid;
+            } else if (!empty($this->usersearch)) {
+                $additionalparams['gpr_search'] = $this->usersearch;
             }
 
             $actionbarrenderer = $PAGE->get_renderer('core_course', 'actionbar');

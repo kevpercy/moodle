@@ -113,9 +113,7 @@ class grading_actionmenu implements templatable, renderable {
 
         if (!empty($userid)) {
             $additionalparams['userid'] = $userid;
-        }
-
-        if (!empty($searchparam)) {
+        } else if (!empty($searchparam)) {
             $additionalparams['search'] = $searchparam;
         }
 
