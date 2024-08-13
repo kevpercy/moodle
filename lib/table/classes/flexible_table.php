@@ -155,7 +155,7 @@ class flexible_table {
     private $persistent = false;
 
     /** @var array For storing user-customised table properties in the user_preferences db table. */
-    private $prefs = [];
+    protected $prefs = [];
 
     /**
      * Constructor
@@ -1575,15 +1575,6 @@ class flexible_table {
             }
         }
         unset($oldprefs);
-    }
-
-    /**
-     * Gets the preferences array for the table (sortby, i_first, i_last etc.).
-     *
-     * @return array
-     */
-    public function get_preferences(): array {
-        return $this->prefs;
     }
 
     /**
