@@ -500,8 +500,7 @@ class helper {
             $config->instructorcustomparameters = self::params_to_string($item->custom);
         }
 
-        // Set the status, allowing the form to validate, and pass an indicator to the relevant form field.
-        $config->selectcontentstatus = true;
+        // Pass an indicator to the relevant form field.
         $config->selectcontentindicator = $OUTPUT->pix_icon('i/valid', get_string('yes')) . get_string('contentselected', 'core_ltix');
 
         return $config;
