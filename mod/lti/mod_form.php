@@ -224,42 +224,42 @@ class mod_lti_mod_form extends moodleform_mod {
 
         $launchoptions = [
             LTI_LAUNCH_CONTAINER_DEFAULT => get_string('default', 'lti'),
-            LTI_LAUNCH_CONTAINER_EMBED => get_string('embed', 'lti'),
-            LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS => get_string('embed_no_blocks', 'lti'),
-            LTI_LAUNCH_CONTAINER_REPLACE_MOODLE_WINDOW => get_string('existing_window', 'lti'),
-            LTI_LAUNCH_CONTAINER_WINDOW => get_string('new_window', 'lti')
+            LTI_LAUNCH_CONTAINER_EMBED => get_string('embed', 'core_ltix'),
+            LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS => get_string('embed_no_blocks', 'core_ltix'),
+            LTI_LAUNCH_CONTAINER_REPLACE_MOODLE_WINDOW => get_string('existing_window', 'core_ltix'),
+            LTI_LAUNCH_CONTAINER_WINDOW => get_string('new_window', 'core_ltix')
         ];
         $mform->addElement('select', 'launchcontainer', get_string('launchinpopup', 'lti'), $launchoptions);
         $mform->addHelpButton('launchcontainer', 'launchinpopup', 'lti');
         $mform->setAdvanced('launchcontainer');
 
         if ($canviewmanualconfig) {
-            $mform->addElement('text', 'resourcekey', get_string('resourcekey', 'lti'));
+            $mform->addElement('text', 'resourcekey', get_string('resourcekey', 'core_ltix'));
             $mform->setType('resourcekey', PARAM_TEXT);
             $mform->setAdvanced('resourcekey');
-            $mform->addHelpButton('resourcekey', 'resourcekey', 'lti');
+            $mform->addHelpButton('resourcekey', 'resourcekey', 'core_ltix');
             $mform->setForceLtr('resourcekey');
 
-            $mform->addElement('passwordunmask', 'password', get_string('password', 'lti'));
+            $mform->addElement('passwordunmask', 'password', get_string('password', 'core_ltix'));
             $mform->setType('password', PARAM_TEXT);
             $mform->setAdvanced('password');
-            $mform->addHelpButton('password', 'password', 'lti');
+            $mform->addHelpButton('password', 'password', 'core_ltix');
 
-            $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'lti'), ['rows' => 4, 'cols' => 60]);
+            $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'core_ltix'), ['rows' => 4, 'cols' => 60]);
             $mform->setType('instructorcustomparameters', PARAM_TEXT);
             $mform->setAdvanced('instructorcustomparameters');
-            $mform->addHelpButton('instructorcustomparameters', 'custom', 'lti');
+            $mform->addHelpButton('instructorcustomparameters', 'custom', 'core_ltix');
             $mform->setForceLtr('instructorcustomparameters');
 
-            $mform->addElement('text', 'icon', get_string('icon_url', 'lti'), ['size' => '64']);
+            $mform->addElement('text', 'icon', get_string('icon_url', 'core_ltix'), ['size' => '64']);
             $mform->setType('icon', PARAM_URL);
             $mform->setAdvanced('icon');
-            $mform->addHelpButton('icon', 'icon_url', 'lti');
+            $mform->addHelpButton('icon', 'icon_url', 'core_ltix');
 
-            $mform->addElement('text', 'secureicon', get_string('secure_icon_url', 'lti'), ['size' => '64']);
+            $mform->addElement('text', 'secureicon', get_string('secure_icon_url', 'core_ltix'), ['size' => '64']);
             $mform->setType('secureicon', PARAM_URL);
             $mform->setAdvanced('secureicon');
-            $mform->addHelpButton('secureicon', 'secure_icon_url', 'lti');
+            $mform->addHelpButton('secureicon', 'secure_icon_url', 'core_ltix');
         } else {
             // Need to submit these still, but hidden to avoid instructor modification.
             $mform->addElement('hidden', 'resourcekey', '', ['id' => 'id_resourcekey']);
@@ -275,7 +275,7 @@ class mod_lti_mod_form extends moodleform_mod {
         }
 
         // Add privacy preferences fieldset where users choose whether to send their data.
-        $mform->addElement('header', 'privacy', get_string('privacy', 'lti'));
+        $mform->addElement('header', 'privacy', get_string('privacy', 'core_ltix'));
 
         $mform->addElement('advcheckbox', 'instructorchoicesendname', get_string('share_name', 'lti'));
         $mform->addHelpButton('instructorchoicesendname', 'share_name', 'lti');
@@ -370,8 +370,8 @@ class mod_lti_mod_form extends moodleform_mod {
                 || !empty($this->current->secureicon) || !empty($this->current->icon));
 
             $selectcontentindicatorinner = $iscontentitem ?
-                $OUTPUT->pix_icon('i/valid', get_string('contentselected', 'mod_lti'), 'moodle', ['class' => 'mr-1'])
-                . get_string('contentselected', 'mod_lti') : '';
+                $OUTPUT->pix_icon('i/valid', get_string('contentselected', 'core_ltix'), 'moodle', ['class' => 'mr-1'])
+                . get_string('contentselected', 'core_ltix') : '';
             $selectcontentindicator = html_writer::div($selectcontentindicatorinner, '',
                 ['aria-role' => 'status', 'id' => 'id_selectcontentindicator']);
             $selectcontentstatus = $iscontentitem ? 'true' : 'false';
@@ -464,11 +464,11 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->setType('resourcekey', PARAM_TEXT);
         $mform->addElement('hidden', 'password', '', ['id' => 'id_password']);
         $mform->setType('password', PARAM_TEXT);
-        $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'lti'),
+        $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'core_ltix'),
             ['rows' => 4, 'cols' => 60]);
         $mform->setType('instructorcustomparameters', PARAM_TEXT);
         $mform->setAdvanced('instructorcustomparameters');
-        $mform->addHelpButton('instructorcustomparameters', 'custom', 'lti');
+        $mform->addHelpButton('instructorcustomparameters', 'custom', 'core_ltix');
         $mform->setForceLtr('instructorcustomparameters');
         $mform->addElement('hidden', 'icon', '', ['id' => 'id_icon']);
         $mform->setType('icon', PARAM_URL);

@@ -188,6 +188,17 @@ If this field is left blank, a default value will be used based on the site conf
 $string['parameter'] = 'Tool parameters';
 $string['parameter_help'] = 'Tool parameters are settings requested to be passed by the tool provider in the accepted tool proxy.';
 $string['password'] = 'Shared secret';
+$string['password_help'] = 'For pre-configured tools, it is not necessary to enter a shared secret here, as the shared secret will be
+provided as part of the configuration process.
+
+This field should be entered if creating a link to a tool provider which is not already configured.
+If the tool provider is to be used more than once in this course, adding a course tool configuration is a good idea.
+
+The shared secret can be thought of as a password used to authenticate access to the tool. It should be provided
+along with the consumer key from the tool provider.
+
+Tools which do not require secure communication from Moodle and do not provide additional services (such as grade reporting)
+may not require a shared secret.';
 $string['password_admin'] = 'Shared secret';
 $string['password_admin_help'] = 'The shared secret can be thought of as a password used to authenticate access to the tool. It should be provided
 along with the consumer key from the tool provider.
@@ -214,6 +225,20 @@ $string['registrationurl_help'] = 'The registration URL should be available from
 $string['reject'] = 'Reject';
 $string['rejected'] = 'Rejected';
 $string['resourcekey'] = 'Consumer key';
+$string['resourcekey_help'] = 'For pre-configured tools, it is not necessary to enter a resource key here, as the consumer key will be
+provided as part of the configuration process.
+
+This field should be entered if creating a link to a tool provider which is not already configured.
+If the tool provider is to be used more than once in this course, adding a course tool configuration is a good idea.
+
+The consumer key can be thought of as a username used to authenticate access to the tool.
+It can be used by the tool provider to uniquely identify the Moodle site from which users launch into the tool.
+
+The consumer key must be provided by the tool provider. The method of obtaining a consumer key varies between
+tool providers. It may be an automated process, or it may require a dialogue with the tool provider.
+
+Tools which do not require secure communication from Moodle and do not provide additional services (such as grade reporting)
+may not require a resource key.';
 $string['resourcekey_admin'] = 'Consumer key';
 $string['resourcekey_admin_help'] = 'The consumer key can be thought of as a username used to authenticate access to the tool.
 It can be used by the tool provider to uniquely identify the Moodle site from which users launch into the tool.
@@ -228,31 +253,15 @@ $string['restricttocategory_help'] = 'To restrict use of this tool to courses wi
 $string['return_to_course'] = 'Click <a href="{$a->link}" target="_top">here</a> to return to the course.';
 $string['secure_icon_url'] = 'Secure icon URL';
 $string['secure_icon_url_help'] = 'Similar to the icon URL, but used when the site is accessed securely through SSL. This field is to prevent the browser from displaying a warning about an insecure image.';
-$string['secure_launch_url'] = 'Secure tool URL';
-$string['secure_launch_url_help'] = 'Similar to the tool URL, but used instead of the tool URL if high security is required. Moodle will use the secure tool URL instead of the tool URL if the Moodle site is accessed through SSL, or if the tool configuration is set to always launch through SSL.
-
-The tool URL may also be set to an https address to force launching through SSL, and this field may be left blank.';
 $string['services'] = 'Services';
 $string['services_help'] = 'Select those services which you wish to offer to the tool provider.  More than one service can be selected.';
-$string['share_email'] = 'Share launcher\'s email with the tool';
 $string['share_email_admin'] = 'Share launcher\'s email with tool';
 $string['share_email_admin_help'] = 'Specify whether the e-mail address of the user launching the tool will be shared with the tool provider.
 The tool provider may need launcher\'s e-mail addresses to distinguish users with the same name in the UI, or send e-mails
 to users based on actions within the tool.';
-$string['share_email_help'] = 'Specify whether the e-mail address of the user launching the tool will be shared with the tool provider.
-
-The tool provider may need launcher\'s email addresses to distinguish users with the same name, or send emails to users based on actions within the tool.
-
-Note that this setting may be overridden in the tool configuration.';
-$string['share_name'] = 'Share launcher\'s name with the tool';
 $string['share_name_admin'] = 'Share launcher\'s name with tool';
 $string['share_name_admin_help'] = 'Specify whether the full name of the user launching the tool should be shared with the tool provider.
 The tool provider may need launchers\' names to show meaningful information within the tool.';
-$string['share_name_help'] = 'Specify whether the full name of the user launching the tool should be shared with the tool provider.
-
-The tool provider may need launchers\' names to show meaningful information within the tool.
-
-Note that this setting may be overridden in the tool configuration.';
 $string['showinactivitychooser'] = 'Show in activity chooser';
 $string['show_in_course_activity_chooser'] = 'Show in activity chooser and as a preconfigured tool';
 $string['show_in_course_lti1'] = 'Tool configuration usage';
