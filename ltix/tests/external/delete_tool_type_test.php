@@ -43,6 +43,7 @@ class delete_tool_type_test extends lti_testcase {
      * @return void
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 

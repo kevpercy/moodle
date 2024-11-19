@@ -41,6 +41,7 @@ class get_tool_types_test extends lti_testcase {
      * @return void
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
