@@ -217,3 +217,16 @@ toolurl,mod_lti
 toolurl_help,mod_lti
 toolurlplaceholder,mod_lti
 unknownstate,mod_lti
+privacy:metadata:createdby,mod_lti
+privacy:metadata:lti_submission,mod_lti
+privacy:metadata:lti_submission:datesubmitted,mod_lti
+privacy:metadata:lti_submission:dateupdated,mod_lti
+privacy:metadata:lti_submission:gradepercent,mod_lti
+privacy:metadata:lti_submission:originalgrade,mod_lti
+privacy:metadata:lti_submission:userid,mod_lti
+privacy:metadata:lti_tool_proxies,mod_lti
+privacy:metadata:lti_tool_proxies:name,mod_lti
+privacy:metadata:lti_types,mod_lti
+privacy:metadata:lti_types:name,mod_lti
+privacy:metadata:timecreated,mod_lti
+privacy:metadata:timemodified,mod_lti
