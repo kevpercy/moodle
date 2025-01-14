@@ -52,58 +52,7 @@ class provider implements
      * @return collection the updated collection of metadata items.
      */
     public static function get_metadata(collection $items): collection {
-        $items->add_external_location_link(
-            'lti_provider',
-            [
-                'userid' => 'privacy:metadata:userid',
-                'username' => 'privacy:metadata:username',
-                'useridnumber' => 'privacy:metadata:useridnumber',
-                'firstname' => 'privacy:metadata:firstname',
-                'lastname' => 'privacy:metadata:lastname',
-                'fullname' => 'privacy:metadata:fullname',
-                'email' => 'privacy:metadata:email',
-                'role' => 'privacy:metadata:role',
-                'courseid' => 'privacy:metadata:courseid',
-                'courseidnumber' => 'privacy:metadata:courseidnumber',
-                'courseshortname' => 'privacy:metadata:courseshortname',
-                'coursefullname' => 'privacy:metadata:coursefullname',
-            ],
-            'privacy:metadata:externalpurpose'
-        );
-
-        $items->add_database_table(
-            'lti_submission',
-            [
-                'userid' => 'privacy:metadata:lti_submission:userid',
-                'datesubmitted' => 'privacy:metadata:lti_submission:datesubmitted',
-                'dateupdated' => 'privacy:metadata:lti_submission:dateupdated',
-                'gradepercent' => 'privacy:metadata:lti_submission:gradepercent',
-                'originalgrade' => 'privacy:metadata:lti_submission:originalgrade',
-            ],
-            'privacy:metadata:lti_submission'
-        );
-
-        $items->add_database_table(
-            'lti_tool_proxies',
-            [
-                'name' => 'privacy:metadata:lti_tool_proxies:name',
-                'createdby' => 'privacy:metadata:createdby',
-                'timecreated' => 'privacy:metadata:timecreated',
-                'timemodified' => 'privacy:metadata:timemodified'
-            ],
-            'privacy:metadata:lti_tool_proxies'
-        );
-
-        $items->add_database_table(
-            'lti_types',
-            [
-                'name' => 'privacy:metadata:lti_types:name',
-                'createdby' => 'privacy:metadata:createdby',
-                'timecreated' => 'privacy:metadata:timecreated',
-                'timemodified' => 'privacy:metadata:timemodified'
-            ],
-            'privacy:metadata:lti_types'
-        );
+        // All user data is stored via the lti subsystem, not this plugin.
 
         return $items;
     }
@@ -115,6 +64,8 @@ class provider implements
      * @return contextlist the list of contexts containing user info for the user.
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
+        list($join, $where, $params) = \core_ltix\privacy\provider::get_join_sql($userid);
+
         // Fetch all LTI submissions.
         $sql = "SELECT c.id
                   FROM {context} c
@@ -126,36 +77,15 @@ class provider implements
                    AND m.name = :modname
             INNER JOIN {lti} lti
                     ON lti.id = cm.instance
-            INNER JOIN {lti_submission} ltisub
-                    ON ltisub.ltiid = lti.id
-                 WHERE ltisub.userid = :userid";
+            {$join}
+            {$where}";
 
-        $params = [
+        $params += [
             'modname' => 'lti',
             'contextlevel' => CONTEXT_MODULE,
-            'userid' => $userid,
         ];
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, $params);
-
-        // Fetch all LTI types.
-        $sql = "SELECT c.id
-                 FROM {context} c
-                 JOIN {course} course
-                   ON c.contextlevel = :contextlevel
-                  AND c.instanceid = course.id
-                 JOIN {lti_types} ltit
-                   ON ltit.course = course.id
-                WHERE ltit.createdby = :userid";
-
-        $params = [
-            'contextlevel' => CONTEXT_COURSE,
-            'userid' => $userid
-        ];
-        $contextlist->add_from_sql($sql, $params);
-
-        // The LTI tool proxies sit in the system context.
-        $contextlist->add_system_context();
 
         return $contextlist;
     }
@@ -168,48 +98,23 @@ class provider implements
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
 
-        if (!is_a($context, \context_module::class)) {
-            return;
-        }
-
-        // Fetch all LTI submissions.
-        $sql = "SELECT ltisub.userid
+        // Find users with LTI submissions.
+        $sql = "SELECT lti.id
                   FROM {context} c
-            INNER JOIN {course_modules} cm
-                    ON cm.id = c.instanceid
-                   AND c.contextlevel = :contextlevel
-            INNER JOIN {modules} m
-                    ON m.id = cm.module
-                   AND m.name = :modname
-            INNER JOIN {lti} lti
-                    ON lti.id = cm.instance
-            INNER JOIN {lti_submission} ltisub
-                    ON ltisub.ltiid = lti.id
+                  JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {lti} lti ON lti.id = cm.instance
                  WHERE c.id = :contextid";
 
         $params = [
-            'modname' => 'lti',
-            'contextlevel' => CONTEXT_MODULE,
-            'contextid' => $context->id,
+            'modname'       => 'lti',
+            'contextid'     => $context->id,
+            'contextlevel'  => CONTEXT_MODULE,
         ];
 
-        $userlist->add_from_sql('userid', $sql, $params);
+        $itemtype = ''; // TODO: Check this when lti_instance table is fleshed out.
 
-        // Fetch all LTI types.
-        $sql = "SELECT ltit.createdby AS userid
-                 FROM {context} c
-                 JOIN {course} course
-                   ON c.contextlevel = :contextlevel
-                  AND c.instanceid = course.id
-                 JOIN {lti_types} ltit
-                   ON ltit.course = course.id
-                WHERE c.id = :contextid";
-
-        $params = [
-            'contextlevel' => CONTEXT_COURSE,
-            'contextid' => $context->id,
-        ];
-        $userlist->add_from_sql('userid', $sql, $params);
+        \core_ltix\privacy\provider::get_users_in_context_from_sql($userlist, 'lti', 'mod_lti', $itemtype, $sql, $params);
     }
 
     /**
@@ -218,11 +123,12 @@ class provider implements
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
     public static function export_user_data(approved_contextlist $contextlist) {
-        self::export_user_data_lti_submissions($contextlist);
+        $userid = $contextlist->get_user()->id;
 
-        self::export_user_data_lti_types($contextlist);
-
-        self::export_user_data_lti_tool_proxies($contextlist);
+        foreach ($contextlist as $context) {
+            // Store all LTI submissions for this module that belong to the user.
+            \core_ltix\privacy\provider::export_lti_submissions($userid, $context, $postarea, 'mod_lti', 'lti_submissions', $lti->id);
+        }
     }
 
     /**
@@ -238,7 +144,7 @@ class provider implements
         }
 
         if ($cm = get_coursemodule_from_id('lti', $context->instanceid)) {
-            $DB->delete_records('lti_submission', ['ltiid' => $cm->instance]);
+            \core_ltix\privacy\provider::delete_instance_data($cm->instance);
         }
     }
 
@@ -314,7 +220,7 @@ class provider implements
         list($insql, $inparams) = $DB->get_in_or_equal($ltiids, SQL_PARAMS_NAMED);
         $params = array_merge($inparams, ['userid' => $user->id]);
         $recordset = $DB->get_recordset_select('lti_submission', "ltiid $insql AND userid = :userid", $params, 'dateupdated, id');
-        self::recordset_loop_and_export($recordset, 'ltiid', [], function($carry, $record) use ($user, $ltiidstocmids) {
+        \core_ltix\privacy\provider::recordset_loop_and_export($recordset, 'ltiid', [], function($carry, $record) use ($user, $ltiidstocmids) {
             $carry[] = [
                 'gradepercent' => $record->gradepercent,
                 'originalgrade' => $record->originalgrade,
@@ -336,41 +242,9 @@ class provider implements
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
+    #[\core\attribute\deprecated(null, since: '5.0', mdl: 'MDL-80214')]
     protected static function export_user_data_lti_types(approved_contextlist $contextlist) {
-        global $DB;
-
-        // Filter out any contexts that are not related to courses.
-        $courseids = array_reduce($contextlist->get_contexts(), function($carry, $context) {
-            if ($context->contextlevel == CONTEXT_COURSE) {
-                $carry[] = $context->instanceid;
-            }
-            return $carry;
-        }, []);
-
-        if (empty($courseids)) {
-            return;
-        }
-
-        $user = $contextlist->get_user();
-
-        list($insql, $inparams) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-        $params = array_merge($inparams, ['userid' => $user->id]);
-        $ltitypes = $DB->get_recordset_select('lti_types', "course $insql AND createdby = :userid", $params, 'timecreated ASC');
-        self::recordset_loop_and_export($ltitypes, 'course', [], function($carry, $record) {
-            $context = \context_course::instance($record->course);
-            $options = ['context' => $context];
-            $carry[] = [
-                'name' => format_string($record->name, true, $options),
-                'createdby' => transform::user($record->createdby),
-                'timecreated' => transform::datetime($record->timecreated),
-                'timemodified' => transform::datetime($record->timemodified)
-            ];
-            return $carry;
-        }, function($courseid, $data) {
-            $context = \context_course::instance($courseid);
-            $finaldata = (object) ['lti_types' => $data];
-            writer::with_context($context)->export_data([], $finaldata);
-        });
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -378,36 +252,9 @@ class provider implements
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
+    #[\core\attribute\deprecated(null, since: '5.0', mdl: 'MDL-80214')]
     protected static function export_user_data_lti_tool_proxies(approved_contextlist $contextlist) {
-        global $DB;
-
-        // Filter out any contexts that are not related to system context.
-        $systemcontexts = array_filter($contextlist->get_contexts(), function($context) {
-            return $context->contextlevel == CONTEXT_SYSTEM;
-        });
-
-        if (empty($systemcontexts)) {
-            return;
-        }
-
-        $user = $contextlist->get_user();
-
-        $systemcontext = \context_system::instance();
-
-        $data = [];
-        $ltiproxies = $DB->get_recordset('lti_tool_proxies', ['createdby' => $user->id], 'timecreated ASC');
-        foreach ($ltiproxies as $ltiproxy) {
-            $data[] = [
-                'name' => format_string($ltiproxy->name, true, ['context' => $systemcontext]),
-                'createdby' => transform::user($ltiproxy->createdby),
-                'timecreated' => transform::datetime($ltiproxy->timecreated),
-                'timemodified' => transform::datetime($ltiproxy->timemodified)
-            ];
-        }
-        $ltiproxies->close();
-
-        $finaldata = (object) ['lti_tool_proxies' => $data];
-        writer::with_context($systemcontext)->export_data([], $finaldata);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -443,23 +290,9 @@ class provider implements
      * @param callable $export The function to export the dataset, receives the last value from $splitkey and the dataset.
      * @return void
      */
+    #[\core\attribute\deprecated(null, since: '5.0', mdl: 'MDL-80214')]
     protected static function recordset_loop_and_export(\moodle_recordset $recordset, $splitkey, $initial,
                                                         callable $reducer, callable $export) {
-        $data = $initial;
-        $lastid = null;
-
-        foreach ($recordset as $record) {
-            if ($lastid && $record->{$splitkey} != $lastid) {
-                $export($lastid, $data);
-                $data = $initial;
-            }
-            $data = $reducer($data, $record);
-            $lastid = $record->{$splitkey};
-        }
-        $recordset->close();
-
-        if (!empty($lastid)) {
-            $export($lastid, $data);
-        }
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 }
