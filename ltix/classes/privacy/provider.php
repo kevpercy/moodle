@@ -206,11 +206,52 @@ class provider implements
     }
 
     public static function delete_data_for_all_users_in_context(\context $context) {
-        // TODO: Implement delete_data_for_all_users_in_context() method.
+        global $DB;
+
+        // Tags can only be defined in system context.
+        if ($context->contextlevel == CONTEXT_SYSTEM) {
+            $DB->delete_records('lti_tool_proxies');
+        } else if ($context->contextlevel == CONTEXT_COURSE) {
+            $DB->delete_records('lti_types');
+        }
     }
 
     public static function delete_data_for_user(approved_contextlist $contextlist) {
-        // TODO: Implement delete_data_for_user() method.
+        global $DB;
+        if (!$contextlist->count()) {
+            return;
+        }
+
+        foreach ($contextlist->get_contexts() as $context) {
+            if ($context->contextlevel == CONTEXT_SYSTEM) {
+                $table = 'lti_tool_proxies';
+            } else if ($context->contextlevel == CONTEXT_COURSE) {
+                $table = 'lti_types';
+            } else {
+                continue;
+            }
+
+            // Do not delete from the table in case they are used by somebody else.
+            $DB->set_field_select($table, 'createdby', 0, 'createdby = ?', [$contextlist->get_user()->id]);
+        }
+    }
+
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB;
+
+        $context = $userlist->get_context();
+
+        if ($context->contextlevel == CONTEXT_SYSTEM) {
+            $table = 'lti_tool_proxies';
+        } else if ($context->contextlevel == CONTEXT_COURSE) {
+            $table = 'lti_types';
+        } else {
+            return;
+        }
+
+        // Do not delete from the table in case they are used by somebody else.
+        list($usersql, $userparams) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+        $DB->set_field_select($table, 'createdby', 0, "createdby {$usersql}", $userparams);
     }
 
     public static function get_users_in_context(userlist $userlist): void {
@@ -241,6 +282,7 @@ class provider implements
         }
     }
 
+    // TODO: Update this once the lti_instance table is done.
     public static function get_users_in_context_from_sql(
             userlist $userlist,
             string $alias,
@@ -260,10 +302,6 @@ class provider implements
         $params["{$alias}itemtype"] = $itemtype;
 
         $userlist->add_from_sql('userid', $sql, $params);
-    }
-
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        // TODO: Implement delete_data_for_users() method.
     }
 
     public static function get_metadata(collection $collection): collection {
@@ -332,9 +370,19 @@ class provider implements
         }
     }
 
-    public static function delete_instance_data($ltiid) {
+    public static function delete_instance_data(int $ltiid, int|array $userids = null) {
         global $DB;
 
-        $DB->delete_records('lti_submission', ['ltiid' => $ltiid]);
+        $params = ['ltiid' => $ltiid];
+        $sql = "ltiid = :ltiid";
+
+        if (!is_null($userids)) {
+            $userids = (array) $userids;
+            list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+            $sql .= " AND userid {$insql}";
+            $params = array_merge($params, $inparams);
+        }
+
+        $DB->delete_records_select('lti_submission', $sql, $params);
     }
 }
