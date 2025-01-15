@@ -53,7 +53,7 @@ class provider implements
      */
     public static function get_metadata(collection $items): collection {
         // All user data is stored via the lti subsystem, not this plugin.
-
+        $items->add_subsystem_link('core_ltix', [], 'privacy:metadata:core_ltix');
         return $items;
     }
 
@@ -137,8 +137,6 @@ class provider implements
      * @param \context $context the context to delete in.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
-        global $DB;
-
         if (!$context instanceof \context_module) {
             return;
         }
@@ -166,7 +164,7 @@ class provider implements
                 continue;
             }
             $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
-            $DB->delete_records('lti_submission', ['ltiid' => $instanceid, 'userid' => $userid]);
+            \core_ltix\privacy\provider::delete_instance_data($instanceid, $userid);
         }
     }
 
@@ -182,12 +180,7 @@ class provider implements
 
         if ($context instanceof \context_module) {
             $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
-
-            list($insql, $inparams) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
-            $sql = "ltiid = :instanceid AND userid {$insql}";
-            $params = array_merge(['instanceid' => $instanceid], $inparams);
-
-            $DB->delete_records_select('lti_submission', $sql, $params);
+            \core_ltix\privacy\provider::delete_instance_data($instanceid, $userlist->get_userids());
         }
     }
 
@@ -294,5 +287,7 @@ class provider implements
     protected static function recordset_loop_and_export(\moodle_recordset $recordset, $splitkey, $initial,
                                                         callable $reducer, callable $export) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+
+        \core_ltix\privacy\provider::recordset_loop_and_export($recordset, $splitkey, $initial, $reducer, $export);
     }
 }
