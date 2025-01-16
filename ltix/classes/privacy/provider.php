@@ -19,6 +19,7 @@ namespace core_ltix\privacy;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\contextlist;
+use core_privacy\local\request\helper;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\writer;
 use core_privacy\local\request\userlist;
@@ -48,6 +49,123 @@ class provider implements
     \core_privacy\local\request\shared_userlist_provider
 {
 
+
+    /**
+     * Returns information about the user data stored in this component.
+     *
+     * @param collection $collection A list of information about this component
+     * @return collection The collection object filled out with information about this component.
+     */
+    public static function get_metadata(collection $collection): collection {
+        $collection->add_database_table(
+            'lti_submission',
+            [
+                'userid' => 'privacy:metadata:lti_submission:userid',
+                'datesubmitted' => 'privacy:metadata:lti_submission:datesubmitted',
+                'dateupdated' => 'privacy:metadata:lti_submission:dateupdated',
+                'gradepercent' => 'privacy:metadata:lti_submission:gradepercent',
+                'originalgrade' => 'privacy:metadata:lti_submission:originalgrade',
+            ],
+            'privacy:metadata:lti_submission'
+        );
+
+        $collection->add_database_table(
+            'lti_tool_proxies',
+            [
+                'name' => 'privacy:metadata:lti_tool_proxies:name',
+                'createdby' => 'privacy:metadata:createdby',
+                'timecreated' => 'privacy:metadata:timecreated',
+                'timemodified' => 'privacy:metadata:timemodified',
+            ],
+            'privacy:metadata:lti_tool_proxies'
+        );
+        $collection->add_database_table(
+            'lti_types',
+            [
+                'name' => 'privacy:metadata:lti_types:name',
+                'createdby' => 'privacy:metadata:createdby',
+                'timecreated' => 'privacy:metadata:timecreated',
+                'timemodified' => 'privacy:metadata:timemodified',
+            ],
+            'privacy:metadata:lti_types'
+        );
+        return $collection;
+    }
+
+    /**
+     * Gets all of the users in a specified context.
+     *
+     * @param userlist $userlist List of users and context to check.
+     * @return void
+     */
+    public static function get_users_in_context(userlist $userlist): void {
+        $context = $userlist->get_context();
+
+        if ($context->contextlevel == CONTEXT_SYSTEM) {
+            // Fetch all LTI tool proxies.
+            $sql = "SELECT ltit.createdby AS userid
+                      FROM {lti_tool_proxies} ltp";
+            $userlist->add_from_sql('userid', $sql, []);
+        }
+
+        if ($context->contextlevel == CONTEXT_COURSE) {
+            // Fetch all LTI types.
+            $sql = "SELECT ltit.createdby AS userid
+                 FROM {context} c
+                 JOIN {course} course
+                   ON c.contextlevel = :contextlevel
+                  AND c.instanceid = course.id
+                 JOIN {lti_types} ltit
+                   ON ltit.course = course.id
+                WHERE c.id = :contextid";
+            $params = [
+                'contextlevel' => CONTEXT_COURSE,
+                'contextid' => $context->id,
+            ];
+            $userlist->add_from_sql('userid', $sql, $params);
+        }
+    }
+
+    /**
+     * Gets a list of users in the LTI submission and instance tables
+     * using the requested parameters.
+     *
+     * @param userlist $userlist List of users and context to check.
+     * @param string $alias Alias of the submission table.
+     * @param string $component Component name to use.
+     * @param string $itemtype Item type to use.
+     * @param string $insql SQL list of item IDs.
+     * @param array $params SQL parameters
+     * @return void
+     */
+    public static function get_users_in_context_from_sql(
+        userlist $userlist,
+        string $alias,
+        string $component,
+        string $itemtype,
+        string $insql,
+        array $params
+    ): void {
+        // TODO: Update this once the lti_instance table is done.
+        $sql = "SELECT {$alias}.userid
+                FROM {lti_submission} {$alias}
+                INNER JOIN {lti_instance} li ON li.ltiid = {$alias}.id
+                WHERE li.component = :{$alias}component
+                    AND li.itemtype = :{$alias}itemtype
+                    AND li.itemid IN ({$insql})";
+
+        $params["{$alias}component"] = $component;
+        $params["{$alias}itemtype"] = $itemtype;
+
+        $userlist->add_from_sql('userid', $sql, $params);
+    }
+
+    /**
+     * Get the list of contexts that contain user information for the specified user.
+     *
+     * @param   int $userid The user to search.
+     * @return  contextlist $contextlist The contextlist containing the list of contexts used in this plugin.
+     */
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
 
@@ -72,11 +190,12 @@ class provider implements
     }
 
     /**
-     * Get SQL to retrieve all LTI instances where the user has been involved.
+     * Get SQL to retrieve all LTI instances/submissions where the user has been involved.
      *
-     * @return array
+     * @param int $userid The user to search
+     * @return array join/where/params SQL parts to include in queries
      */
-    public static function get_join_sql(int $userid) {
+    public static function get_join_sql(int $userid): array {
         $join = "INNER JOIN {lti_submission} ltisub
                 ON ltisub.ltiid = lti.id ";
 
@@ -89,6 +208,18 @@ class provider implements
         ];
     }
 
+    /**
+     * Extracts and exports all of the LTI submissions and instances using the data provided.
+     *
+     * @param int $userid The user to export the data for.
+     * @param \context $context The context in which the data is stored.
+     * @param array $subcontext The specific subcontext to use in the export.
+     * @param string $component The name of the component in the lti_instance table.
+     * @param string $itemtype The type of item to export.
+     * @param int $itemid The ID of the instance.
+     * @return void
+     * @throws \dml_exception
+     */
     public static function export_lti_submissions(
         int $userid,
         \context $context,
@@ -96,7 +227,7 @@ class provider implements
         string $component,
         string $itemtype,
         int $itemid,
-    ) {
+    ): void {
         // TODO: Update this when lti_instance table is fleshed out.
         global $DB;
 
@@ -121,7 +252,13 @@ class provider implements
         }
     }
 
-    public static function export_user_data(approved_contextlist $contextlist) {
+    /**
+     * Extracts and exports all of the user data for the provided contexts.
+     *
+     * @param approved_contextlist $contextlist The list of contexts.
+     * @return void
+     */
+    public static function export_user_data(approved_contextlist $contextlist): void {
         self::export_user_data_lti_types($contextlist);
         self::export_user_data_lti_tool_proxies($contextlist);
     }
@@ -130,8 +267,9 @@ class provider implements
      * Export personal data for the given approved_contextlist related to LTI types.
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
+     * @return void
      */
-    protected static function export_user_data_lti_types(approved_contextlist $contextlist) {
+    protected static function export_user_data_lti_types(approved_contextlist $contextlist): void {
         global $DB;
 
         // Filter out any contexts that are not related to courses.
@@ -172,8 +310,9 @@ class provider implements
      * Export personal data for the given approved_contextlist related to LTI tool proxies.
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
+     * @return void
      */
-    protected static function export_user_data_lti_tool_proxies(approved_contextlist $contextlist) {
+    protected static function export_user_data_lti_tool_proxies(approved_contextlist $contextlist): void {
         global $DB;
 
         // Filter out any contexts that are not related to system context.
@@ -205,10 +344,62 @@ class provider implements
         writer::with_context($systemcontext)->export_data([], $finaldata);
     }
 
-    public static function delete_data_for_all_users_in_context(\context $context) {
+    /**
+     * Export personal data for the given approved_contextlist related to LTI submissions.
+     *
+     * @param approved_contextlist $contextlist a list of contexts approved for export.
+     * @return void
+     */
+    public static function export_user_data_lti_submissions(approved_contextlist $contextlist): void {
         global $DB;
 
-        // Tags can only be defined in system context.
+        // Filter out any contexts that are not related to modules.
+        $cmids = array_reduce($contextlist->get_contexts(), function($carry, $context) {
+            if ($context->contextlevel == CONTEXT_MODULE) {
+                $carry[] = $context->instanceid;
+            }
+            return $carry;
+        }, []);
+
+        if (empty($cmids)) {
+            return;
+        }
+
+        $user = $contextlist->get_user();
+
+        // Get all the LTI activities associated with the above course modules.
+        $ltiidstocmids = self::get_lti_ids_to_cmids_from_cmids($cmids);
+        $ltiids = array_keys($ltiidstocmids);
+
+        list($insql, $inparams) = $DB->get_in_or_equal($ltiids, SQL_PARAMS_NAMED);
+        $params = array_merge($inparams, ['userid' => $user->id]);
+        $recordset = $DB->get_recordset_select('lti_submission', "ltiid $insql AND userid = :userid", $params, 'dateupdated, id');
+        \core_ltix\privacy\provider::recordset_loop_and_export($recordset, 'ltiid', [], function($carry, $record) use ($user, $ltiidstocmids) {
+            $carry[] = [
+                'gradepercent' => $record->gradepercent,
+                'originalgrade' => $record->originalgrade,
+                'datesubmitted' => transform::datetime($record->datesubmitted),
+                'dateupdated' => transform::datetime($record->dateupdated)
+            ];
+            return $carry;
+        }, function($ltiid, $data) use ($user, $ltiidstocmids) {
+            $context = \context_module::instance($ltiidstocmids[$ltiid]);
+            $contextdata = helper::get_context_data($context, $user);
+            $finaldata = (object) array_merge((array) $contextdata, ['submissions' => $data]);
+            helper::export_context_files($context, $user);
+            writer::with_context($context)->export_data([], $finaldata);
+        });
+    }
+
+    /**
+     * Deletes LTI data for all users in a given context.
+     *
+     * @param \context $context The context to delete all data for.
+     * @return void
+     */
+    public static function delete_data_for_all_users_in_context(\context $context): void {
+        global $DB;
+
         if ($context->contextlevel == CONTEXT_SYSTEM) {
             $DB->delete_records('lti_tool_proxies');
         } else if ($context->contextlevel == CONTEXT_COURSE) {
@@ -216,7 +407,15 @@ class provider implements
         }
     }
 
-    public static function delete_data_for_user(approved_contextlist $contextlist) {
+    /**
+     * Deletes LTI data for a given user in all provided contexts.
+     * This function just updates the User ID to 0 instead of deleting the LTI instances
+     * because the instances may be used by other people.
+     *
+     * @param approved_contextlist $contextlist List of contexts to delete the user from.
+     * @return void
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist): void {
         global $DB;
         if (!$contextlist->count()) {
             return;
@@ -231,12 +430,19 @@ class provider implements
                 continue;
             }
 
-            // Do not delete from the table in case they are used by somebody else.
             $DB->set_field_select($table, 'createdby', 0, 'createdby = ?', [$contextlist->get_user()->id]);
         }
     }
 
-    public static function delete_data_for_users(approved_userlist $userlist) {
+    /**
+     * Deletes LTI data for a given list of users and their contexts.
+     * This function just updates the User ID to 0 instead of the deleting the LTI instances
+     * because the instances may be used by other people.
+     *
+     * @param approved_userlist $userlist The list of contexts and users to delete the user from.
+     * @return void
+     */
+    public static function delete_data_for_users(approved_userlist $userlist): void {
         global $DB;
 
         $context = $userlist->get_context();
@@ -249,95 +455,31 @@ class provider implements
             return;
         }
 
-        // Do not delete from the table in case they are used by somebody else.
         list($usersql, $userparams) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
         $DB->set_field_select($table, 'createdby', 0, "createdby {$usersql}", $userparams);
     }
 
-    public static function get_users_in_context(userlist $userlist): void {
-        $context = $userlist->get_context();
+    /**
+     * Deletes the data from the LTI submission and instance tables.
+     *
+     * @param int $ltiid ID of the LTI submission.
+     * @param int|array|null $userids User ID or array of IDs to delete the data for.
+     * @return void
+     */
+    public static function delete_instance_data(int $ltiid, int|array $userids = null): void {
+        global $DB;
 
-        if ($context->contextlevel == CONTEXT_SYSTEM) {
-            // Fetch all LTI tool proxies.
-            $sql = "SELECT ltit.createdby AS userid
-                      FROM {lti_tool_proxies} ltp";
-            $userlist->add_from_sql('userid', $sql, []);
+        $params = ['ltiid' => $ltiid];
+        $sql = "ltiid = :ltiid";
+
+        if (!is_null($userids)) {
+            $userids = (array) $userids;
+            list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+            $sql .= " AND userid {$insql}";
+            $params = array_merge($params, $inparams);
         }
 
-        if ($context->contextlevel == CONTEXT_COURSE) {
-            // Fetch all LTI types.
-            $sql = "SELECT ltit.createdby AS userid
-                 FROM {context} c
-                 JOIN {course} course
-                   ON c.contextlevel = :contextlevel
-                  AND c.instanceid = course.id
-                 JOIN {lti_types} ltit
-                   ON ltit.course = course.id
-                WHERE c.id = :contextid";
-            $params = [
-                'contextlevel' => CONTEXT_COURSE,
-                'contextid' => $context->id,
-            ];
-            $userlist->add_from_sql('userid', $sql, $params);
-        }
-    }
-
-    // TODO: Update this once the lti_instance table is done.
-    public static function get_users_in_context_from_sql(
-            userlist $userlist,
-            string $alias,
-            string $component,
-            string $itemtype,
-            string $insql,
-            $params
-    ): void {
-        $sql = "SELECT {$alias}.userid
-                FROM {lti_submission} {$alias}
-                INNER JOIN {lti_instance} li ON li.ltiid = {$alias}.id
-                WHERE li.component = :{$alias}component
-                    AND li.itemtype = :{$alias}itemtype
-                    AND li.itemid IN ({$insql})";
-
-        $params["{$alias}component"] = $component;
-        $params["{$alias}itemtype"] = $itemtype;
-
-        $userlist->add_from_sql('userid', $sql, $params);
-    }
-
-    public static function get_metadata(collection $collection): collection {
-        $collection->add_database_table(
-            'lti_submission',
-            [
-                'userid' => 'privacy:metadata:lti_submission:userid',
-                'datesubmitted' => 'privacy:metadata:lti_submission:datesubmitted',
-                'dateupdated' => 'privacy:metadata:lti_submission:dateupdated',
-                'gradepercent' => 'privacy:metadata:lti_submission:gradepercent',
-                'originalgrade' => 'privacy:metadata:lti_submission:originalgrade',
-            ],
-            'privacy:metadata:lti_submission'
-        );
-
-        $collection->add_database_table(
-            'lti_tool_proxies',
-            [
-                'name' => 'privacy:metadata:lti_tool_proxies:name',
-                'createdby' => 'privacy:metadata:createdby',
-                'timecreated' => 'privacy:metadata:timecreated',
-                'timemodified' => 'privacy:metadata:timemodified',
-            ],
-            'privacy:metadata:lti_tool_proxies'
-        );
-        $collection->add_database_table(
-            'lti_types',
-            [
-                'name' => 'privacy:metadata:lti_types:name',
-                'createdby' => 'privacy:metadata:createdby',
-                'timecreated' => 'privacy:metadata:timecreated',
-                'timemodified' => 'privacy:metadata:timemodified',
-            ],
-            'privacy:metadata:lti_types'
-        );
-        return $collection;
+        $DB->delete_records_select('lti_submission', $sql, $params);
     }
 
     /**
@@ -350,8 +492,13 @@ class provider implements
      * @param callable $export The function to export the dataset, receives the last value from $splitkey and the dataset.
      * @return void
      */
-    public static function recordset_loop_and_export(\moodle_recordset $recordset, $splitkey, $initial,
-                                                        callable $reducer, callable $export) {
+    public static function recordset_loop_and_export(
+            \moodle_recordset $recordset,
+            string $splitkey,
+            $initial,
+            callable $reducer,
+            callable $export
+    ) {
         $data = $initial;
         $lastid = null;
 
@@ -370,19 +517,26 @@ class provider implements
         }
     }
 
-    public static function delete_instance_data(int $ltiid, int|array $userids = null) {
+    /**
+     * Return a dict of LTI IDs mapped to their course module ID.
+     *
+     * @param array $cmids The course module IDs.
+     * @return array In the form of [$ltiid => $cmid].
+     */
+    protected static function get_lti_ids_to_cmids_from_cmids(array $cmids): array {
         global $DB;
 
-        $params = ['ltiid' => $ltiid];
-        $sql = "ltiid = :ltiid";
+        list($insql, $inparams) = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED);
+        $sql = "SELECT lti.id, cm.id AS cmid
+                 FROM {lti} lti
+                 JOIN {modules} m
+                   ON m.name = :lti
+                 JOIN {course_modules} cm
+                   ON cm.instance = lti.id
+                  AND cm.module = m.id
+                WHERE cm.id $insql";
+        $params = array_merge($inparams, ['lti' => 'lti']);
 
-        if (!is_null($userids)) {
-            $userids = (array) $userids;
-            list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-            $sql .= " AND userid {$insql}";
-            $params = array_merge($params, $inparams);
-        }
-
-        $DB->delete_records_select('lti_submission', $sql, $params);
+        return $DB->get_records_sql_menu($sql, $params);
     }
 }
