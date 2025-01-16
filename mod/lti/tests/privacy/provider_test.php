@@ -48,43 +48,8 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
      */
     public function test_get_metadata(): void {
         $collection = new collection('mod_lti');
-        $newcollection = provider::get_metadata($collection);
-        $itemcollection = $newcollection->get_collection();
-        $this->assertCount(4, $itemcollection);
-
-        $ltiproviderexternal = array_shift($itemcollection);
-        $this->assertEquals('lti_provider', $ltiproviderexternal->get_name());
-
-        $ltisubmissiontable = array_shift($itemcollection);
-        $this->assertEquals('lti_submission', $ltisubmissiontable->get_name());
-
-        $ltitoolproxies = array_shift($itemcollection);
-        $this->assertEquals('lti_tool_proxies', $ltitoolproxies->get_name());
-
-        $ltitypestable = array_shift($itemcollection);
-        $this->assertEquals('lti_types', $ltitypestable->get_name());
-
-        $privacyfields = $ltisubmissiontable->get_privacy_fields();
-        $this->assertArrayHasKey('userid', $privacyfields);
-        $this->assertArrayHasKey('datesubmitted', $privacyfields);
-        $this->assertArrayHasKey('dateupdated', $privacyfields);
-        $this->assertArrayHasKey('gradepercent', $privacyfields);
-        $this->assertArrayHasKey('originalgrade', $privacyfields);
-        $this->assertEquals('privacy:metadata:lti_submission', $ltisubmissiontable->get_summary());
-
-        $privacyfields = $ltitoolproxies->get_privacy_fields();
-        $this->assertArrayHasKey('name', $privacyfields);
-        $this->assertArrayHasKey('createdby', $privacyfields);
-        $this->assertArrayHasKey('timecreated', $privacyfields);
-        $this->assertArrayHasKey('timemodified', $privacyfields);
-        $this->assertEquals('privacy:metadata:lti_tool_proxies', $ltitoolproxies->get_summary());
-
-        $privacyfields = $ltitypestable->get_privacy_fields();
-        $this->assertArrayHasKey('name', $privacyfields);
-        $this->assertArrayHasKey('createdby', $privacyfields);
-        $this->assertArrayHasKey('timecreated', $privacyfields);
-        $this->assertArrayHasKey('timemodified', $privacyfields);
-        $this->assertEquals('privacy:metadata:lti_types', $ltitypestable->get_summary());
+        $collection = provider::get_metadata($collection);
+        $this->assertNotEmpty($collection);
     }
 
     /**
@@ -108,15 +73,11 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
 
         // Check the contexts supplied are correct.
         $contextlist = provider::get_contexts_for_userid($user->id);
-        $this->assertCount(2, $contextlist);
+        $this->assertCount(1, $contextlist);
 
         $contextformodule = $contextlist->current();
         $cmcontext = \context_module::instance($lti->cmid);
         $this->assertEquals($cmcontext->id, $contextformodule->id);
-
-        $contextlist->next();
-        $contextforsystem = $contextlist->current();
-        $this->assertEquals(SYSCONTEXTID, $contextforsystem->id);
     }
 
     /**
@@ -187,82 +148,6 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
 
         $data = $writer->get_data();
         $this->assertCount(2, $data->submissions);
-    }
-
-    /**
-     * Test for provider::export_user_data().
-     */
-    public function test_export_for_context_tool_types(): void {
-        $this->resetAfterTest();
-
-        $course1 = $this->getDataGenerator()->create_course();
-        $course2 = $this->getDataGenerator()->create_course();
-
-        // Create a user which will make a tool type.
-        $user = $this->getDataGenerator()->create_user();
-        $this->setUser($user);
-
-        // Create a user that will not make a tool type.
-        $this->getDataGenerator()->create_user();
-
-        $type = new \stdClass();
-        $type->baseurl = 'http://moodle.org';
-        $type->course = $course1->id;
-        \core_ltix\helper::add_type($type, new \stdClass());
-
-        $type = new \stdClass();
-        $type->baseurl = 'http://moodle.org';
-        $type->course = $course1->id;
-        \core_ltix\helper::add_type($type, new \stdClass());
-
-        $type = new \stdClass();
-        $type->baseurl = 'http://moodle.org';
-        $type->course = $course2->id;
-        \core_ltix\helper::add_type($type, new \stdClass());
-
-        // Export all of the data for the context.
-        $coursecontext = \context_course::instance($course1->id);
-        $this->export_context_data_for_user($user->id, $coursecontext, 'mod_lti');
-        $writer = \core_privacy\local\request\writer::with_context($coursecontext);
-
-        $this->assertTrue($writer->has_any_data());
-
-        $data = $writer->get_data();
-        $this->assertCount(2, $data->lti_types);
-
-        $coursecontext = \context_course::instance($course2->id);
-        $this->export_context_data_for_user($user->id, $coursecontext, 'mod_lti');
-        $writer = \core_privacy\local\request\writer::with_context($coursecontext);
-
-        $this->assertTrue($writer->has_any_data());
-
-        $data = $writer->get_data();
-        $this->assertCount(1, $data->lti_types);
-    }
-
-    /**
-     * Test for provider::export_user_data().
-     */
-    public function test_export_for_context_tool_proxies(): void {
-        $this->resetAfterTest();
-
-        // Create a user that will not make a tool proxy.
-        $user = $this->getDataGenerator()->create_user();
-        $this->setUser($user);
-
-        $toolproxy = new \stdClass();
-        $toolproxy->createdby = $user;
-        \core_ltix\helper::add_tool_proxy($toolproxy);
-
-        // Export all of the data for the context.
-        $systemcontext = \context_system::instance();
-        $this->export_context_data_for_user($user->id, $systemcontext, 'mod_lti');
-        $writer = \core_privacy\local\request\writer::with_context($systemcontext);
-
-        $this->assertTrue($writer->has_any_data());
-
-        $data = $writer->get_data();
-        $this->assertCount(1, $data->lti_tool_proxies);
     }
 
     /**

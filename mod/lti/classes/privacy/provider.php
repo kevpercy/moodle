@@ -61,7 +61,7 @@ class provider implements
      * @return contextlist the list of contexts containing user info for the user.
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
-        list($join, $where, $params) = \core_ltix\privacy\provider::get_join_sql($userid);
+        $joinsql = \core_ltix\privacy\provider::get_join_sql($userid);
 
         // Fetch all LTI submissions.
         $sql = "SELECT c.id
@@ -74,13 +74,15 @@ class provider implements
                    AND m.name = :modname
             INNER JOIN {lti} lti
                     ON lti.id = cm.instance
-            {$join}
-            {$where}";
+            {$joinsql['join']}
+            {$joinsql['where']}";
 
-        $params += [
-            'modname' => 'lti',
-            'contextlevel' => CONTEXT_MODULE,
-        ];
+        $params = array_merge($joinsql['params'],
+            [
+                'modname' => 'lti',
+                'contextlevel' => CONTEXT_MODULE,
+            ]
+        );
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, $params);
 
