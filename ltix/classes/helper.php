@@ -3926,9 +3926,7 @@ class helper {
             $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
             if ($id) {
                 $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-                $context = \context_module::instance($cm->id);
                 require_login($course, true, $cm);
-                require_capability('mod/lti:view', $context);
                 $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
                 $lti->cmid = $cm->id;
                 list($endpoint, $params) = self::get_launch_data($lti, $nonce, $messagetype, $foruserid);
