@@ -2192,12 +2192,13 @@ class grade_category extends grade_object {
                 // prevent problems with duplicate sortorders in db
                 $sortorder = $cat->sortorder;
 
-                while (array_key_exists($sortorder, $cats[$cat->parent]->children)) {
-                    //debugging("$sortorder exists in cat loop");
-                    $sortorder++;
-                }
+                if (isset($cats[$cat->parent])) {
+                    while (array_key_exists($sortorder, $cats[$cat->parent]->children)) {
+                        $sortorder++;
+                    }
 
-                $cats[$cat->parent]->children[$sortorder] = &$cats[$catid];
+                    $cats[$cat->parent]->children[$sortorder] = &$cats[$catid];
+                }
             }
 
             if ($catid == $this->id) {
