@@ -313,50 +313,37 @@ class provider implements
     }
 
     /**
-     * Export personal data for the given approved_contextlist related to LTI submissions.
+     * Export personal data for the given user related to LTI submissions.
      *
-     * @param approved_contextlist $contextlist a list of contexts approved for export.
-     * @return void
+     * @param object $user a user object.
+     * @param array $ltiids List of LTI IDs to export data for.
+     * @return array
      */
-    public static function export_user_data_lti_submissions(approved_contextlist $contextlist): void {
+    public static function export_instance_data(object $user, array $ltiids = []): array {
+        // TODO: Add handling for LTI instance table.
+
         global $DB;
 
-        // Filter out any contexts that are not related to modules.
-        $cmids = array_reduce($contextlist->get_contexts(), function($carry, $context) {
-            if ($context->contextlevel == CONTEXT_MODULE) {
-                $carry[] = $context->instanceid;
-            }
-            return $carry;
-        }, []);
-
-        if (empty($cmids)) {
-            return;
+        if (empty($ltiids)) {
+            return [];
         }
 
-        $user = $contextlist->get_user();
-
-        // Get all the LTI activities associated with the above course modules.
-        $ltiidstocmids = self::get_lti_ids_to_cmids_from_cmids($cmids);
-        $ltiids = array_keys($ltiidstocmids);
-
         list($insql, $inparams) = $DB->get_in_or_equal($ltiids, SQL_PARAMS_NAMED);
-        $params = array_merge($inparams, ['userid' => $user->id]);
-        $recordset = $DB->get_recordset_select('lti_submission', "ltiid $insql AND userid = :userid", $params, 'dateupdated, id');
-        \core_ltix\privacy\provider::recordset_loop_and_export($recordset, 'ltiid', [], function($carry, $record) use ($user, $ltiidstocmids) {
-            $carry[] = [
+        $params = array_merge(['userid' => $user->id], $inparams);
+
+        $recordset = $DB->get_recordset_select('lti_submission', "userid = :userid AND ltiid {$insql}", $params, 'dateupdated, id');
+
+        $return = [];
+        foreach ($recordset as $record) {
+            $return[$record->ltiid] = [
                 'gradepercent' => $record->gradepercent,
                 'originalgrade' => $record->originalgrade,
                 'datesubmitted' => transform::datetime($record->datesubmitted),
                 'dateupdated' => transform::datetime($record->dateupdated)
             ];
-            return $carry;
-        }, function($ltiid, $data) use ($user, $ltiidstocmids) {
-            $context = \context_module::instance($ltiidstocmids[$ltiid]);
-            $contextdata = helper::get_context_data($context, $user);
-            $finaldata = (object) array_merge((array) $contextdata, ['submissions' => $data]);
-            helper::export_context_files($context, $user);
-            writer::with_context($context)->export_data([], $finaldata);
-        });
+        }
+
+        return $return;
     }
 
     /**
@@ -485,28 +472,5 @@ class provider implements
         if (!empty($lastid)) {
             $export($lastid, $data);
         }
-    }
-
-    /**
-     * Return a dict of LTI IDs mapped to their course module ID.
-     *
-     * @param array $cmids The course module IDs.
-     * @return array In the form of [$ltiid => $cmid].
-     */
-    protected static function get_lti_ids_to_cmids_from_cmids(array $cmids): array {
-        global $DB;
-
-        list($insql, $inparams) = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED);
-        $sql = "SELECT lti.id, cm.id AS cmid
-                 FROM {lti} lti
-                 JOIN {modules} m
-                   ON m.name = :lti
-                 JOIN {course_modules} cm
-                   ON cm.instance = lti.id
-                  AND cm.module = m.id
-                WHERE cm.id $insql";
-        $params = array_merge($inparams, ['lti' => 'lti']);
-
-        return $DB->get_records_sql_menu($sql, $params);
     }
 }

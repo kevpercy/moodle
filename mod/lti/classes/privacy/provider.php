@@ -28,6 +28,8 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\userlist;
+use core_privacy\local\request\helper;
+use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -124,7 +126,31 @@ class provider implements
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
     public static function export_user_data(approved_contextlist $contextlist): void {
-        \core_ltix\privacy\provider::export_user_data_lti_submissions($contextlist);
+        // Filter out any contexts that are not related to modules.
+        $cmids = array_reduce($contextlist->get_contexts(), function($carry, $context) {
+            if ($context->contextlevel == CONTEXT_MODULE) {
+                $carry[] = $context->instanceid;
+            }
+            return $carry;
+        }, []);
+
+        if (empty($cmids)) {
+            return;
+        }
+
+        $user = $contextlist->get_user();
+
+        // Get all the LTI activities associated with the above course modules.
+        $ltiidstocmids = self::get_lti_ids_to_cmids_from_cmids($cmids);
+        $instancedata = \core_ltix\privacy\provider::export_instance_data($user->id, array_keys($ltiidstocmids));
+
+        foreach ($instancedata as $ltiid => $data) {
+            $context = \context_module::instance($ltiidstocmids[$ltiid]);
+            $contextdata = helper::get_context_data($context, $user);
+            $finaldata = (object) array_merge((array) $contextdata, ['submissions' => $data]);
+            helper::export_context_files($context, $user);
+            writer::with_context($context)->export_data([], $finaldata);
+        }
     }
 
     /**
@@ -178,5 +204,28 @@ class provider implements
             $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
             \core_ltix\privacy\provider::delete_instance_data($instanceid, $userlist->get_userids());
         }
+    }
+
+    /**
+     * Return a dict of LTI IDs mapped to their course module ID.
+     *
+     * @param array $cmids The course module IDs.
+     * @return array In the form of [$ltiid => $cmid].
+     */
+    protected static function get_lti_ids_to_cmids_from_cmids(array $cmids): array {
+        global $DB;
+
+        list($insql, $inparams) = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED);
+        $sql = "SELECT lti.id, cm.id AS cmid
+                 FROM {lti} lti
+                 JOIN {modules} m
+                   ON m.name = :lti
+                 JOIN {course_modules} cm
+                   ON cm.instance = lti.id
+                  AND cm.module = m.id
+                WHERE cm.id $insql";
+        $params = array_merge($inparams, ['lti' => 'lti']);
+
+        return $DB->get_records_sql_menu($sql, $params);
     }
 }
