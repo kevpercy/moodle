@@ -97,6 +97,10 @@ class provider implements
     public static function get_users_in_context(userlist $userlist): void {
         $context = $userlist->get_context();
 
+        if (!is_a($context, \context_module::class)) {
+            return;
+        }
+
         // Find users with LTI submissions.
         $sql = "SELECT lti.id
                   FROM {context} c
