@@ -14,32 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core_ltix\local\placement;
 /**
- * Mock LTI placement types for the mock plugin fake_fullfeatured.
+ * Interface for component placements handlers.
  *
- * @package    core
+ * @package    core_ltix
  * @copyright  2025 Jake Dallimore <jrhdallimore@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$placementtypes = [
-    // Valid type string and handler.
-    'fake_fullfeatured:myfirstplacementtype' => [
-        'handler' => \fake_fullfeatured\lti\placement\myfirstplacementtype::class
-    ],
-
-    // No handler specified, which is also a valid configuration.
-    'fake_fullfeatured:anotherplacementtype' => [],
-
-    // Invalid type for a handler.
-    'fake_fullfeatured:thirdplacementtype' => [
-        'handler' => \stdClass::class,
-    ],
-
-    // Invalid format for the placement type string.
-    'fake/fullfeatured_invalidplacementtypestring' => [
-        'handler' => \fake_fullfeatured\lti\placement\myfirstplacementtype::class
-    ],
-];
+interface placement_handler {
+    /**
+     * Returns the concrete implementation of the specific placement handler.
+     *
+     * @return static the instance
+     */
+    public static function instance(): static;
+}

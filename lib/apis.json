@@ -164,6 +164,11 @@
         "allowedlevel2": true,
         "allowedspread": true
     },
+    "lti": {
+        "component": "core_ltix",
+        "allowedlevel2": true,
+        "allowedspread": false
+    },
     "media": {
         "component": "core_media",
         "allowedlevel2": false,

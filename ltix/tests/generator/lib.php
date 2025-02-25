@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+use core_ltix\local\placement\placement_status;
 
 /**
  * Data generator class for core_ltix.
@@ -131,4 +132,89 @@ class core_ltix_generator extends testing_module_generator {
         return \core_ltix\helper::add_type(type: $type, config: $config);
     }
 
+    /**
+     * Create a placement type for testing.
+     *
+     * @param string $component the component owning the placement type. e.g. core_ltix, mod_forum.
+     * @param string $placementtype the placement type string.
+     * @return stdClass the placementtype record.
+     */
+    public function create_placement_type(string $component, string $placementtype): stdClass {
+        global $DB;
+        $placementtype = (object) [
+            'component' => $component,
+            'type' => $placementtype,
+        ];
+        $placementtype->id = $DB->insert_record('lti_placement_type', $placementtype);
+        return $placementtype;
+    }
+
+    /**
+     * Create a tool placement of the given type for testing.
+     *
+     * @param int $toolid the tool id.
+     * @param int $placementtypeid the id of the placement type.
+     * @param array $placementconfig the array of placement config in the form of ['configname' => 'configvalue'].
+     * @return stdClass the placement record.
+     */
+    public function create_placement(int $toolid, int $placementtypeid, array $placementconfig = []): stdClass {
+        global $DB;
+
+        $placement = (object) [
+            'toolid' => $toolid,
+            'placementtypeid' => $placementtypeid
+        ];
+        $placement->id = $DB->insert_record('lti_placement', $placement);
+
+        if (empty($placementconfig)) {
+            $placementconfig = ['default_usage' => 'disabled'];
+        }
+
+        foreach ($placementconfig as $name => $value) {
+            $configrow = (object) [
+                'placementid' => $placement->id,
+                'name' => $name,
+                'value' => $value,
+            ];
+            $DB->insert_record('lti_placement_config', $configrow);
+        }
+
+        return $placement;
+    }
+
+    /**
+     * Generate a placement status override for the placement in the context.
+     *
+     * @param int $placementid the id of the tool placement.
+     * @param placement_status $status the desired status.
+     * @param int $contextid the context to set the status in.
+     * @return stdClass the placement_status record created.
+     */
+    public function create_placement_status_in_context(int $placementid, placement_status $status, int $contextid): stdClass {
+        global $DB;
+        $placementstatusrow = (object) [
+            'placementid' => $placementid,
+            'contextid' => $contextid,
+            'status' => $status->value,
+        ];
+        $placementstatusrow->id = $DB->insert_record('lti_placement_status', $placementstatusrow);
+
+        return $placementstatusrow;
+    }
+
+    /**
+     * Create the legacy lti_coursevisible record, signifying the value of "Show in activity chooser" at course level.
+     *
+     * @param int $toolid the tool to set the value for
+     * @param int $courseid the course in which to set the value
+     * @param int $coursevisible LTI_COURSEVISIBLE_ const from \core_ltix\constants, e.g. LTI_COURSEVISIBLE_PRECONFIGURED.
+     * @return stdClass the inserted record.
+     */
+    public function create_legacy_lti_coursevisible(int $toolid, int $courseid, int $coursevisible): stdClass {
+        global $DB;
+        $rec = (object) ['typeid' => $toolid, 'courseid' => $courseid, 'coursevisible' => $coursevisible];
+        $rec->id = $DB->insert_record('lti_coursevisible', $rec);
+
+        return $rec;
+    }
 }
