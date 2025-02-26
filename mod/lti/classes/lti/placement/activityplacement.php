@@ -14,18 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_lti\lti\placement;
+
+use core_ltix\local\placement\deeplinking_placement_handler;
+
 /**
- * LTI placement types for mod_lti.
+ * Deep linking placement handler.
  *
  * @package    mod_lti
  * @copyright  2025 Jake Dallimore <jrhdallimore@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class activityplacement extends deeplinking_placement_handler {
 
-defined('MOODLE_INTERNAL') || die();
-
-$placementtypes = [
-    'mod_lti:activityplacement' => [
-        'handler' => \mod_lti\lti\placement\activityplacement::class
-    ],
-];
+    public static function instance(): static {
+        return new self();
+    }
+}

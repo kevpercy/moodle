@@ -14,18 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_lti;
+
+use core_ltix\local\placement\deeplinking_placement_handler;
+use core_ltix\local\placement\placements_manager;
+
 /**
- * LTI placement types for mod_lti.
+ * Mod LTI activityplacement handler testing.
  *
+ * @covers \mod_lti\lti\placement\activityplacement
  * @package    mod_lti
- * @copyright  2025 Jake Dallimore <jrhdallimore@gmail.com>
+ * @copyright  Jake Dallimore <jrhdallimore@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+final class activityplacement_test extends \advanced_testcase {
 
-defined('MOODLE_INTERNAL') || die();
-
-$placementtypes = [
-    'mod_lti:activityplacement' => [
-        'handler' => \mod_lti\lti\placement\activityplacement::class
-    ],
-];
+    /**
+     * Test confirming that an instance of the handler can be fetched when needed.
+     *
+     * @return void
+     */
+    public function test_get_instance(): void {
+        $this->assertInstanceOf(
+            deeplinking_placement_handler::class,
+            placements_manager::get_instance()->get_deeplinking_placement_instance('mod_lti:activityplacement')
+        );
+    }
+}
