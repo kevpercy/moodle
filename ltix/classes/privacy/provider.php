@@ -316,16 +316,15 @@ class provider implements
      * Export personal data for the given user related to LTI submissions.
      *
      * @param object $user a user object.
-     * @param array $ltiids List of LTI IDs to export data for.
-     * @return array
+     * @param array $ltiidstocmids List of [LTI ID => Context ID] mapping to export data for.
      */
-    public static function export_instance_data(object $user, array $ltiids = []): array {
+    public static function export_instance_data(object $user, array $ltiidstocmids = []): void {
         // TODO: Add handling for LTI instance table.
 
         global $DB;
 
         if (empty($ltiids)) {
-            return [];
+            return;
         }
 
         list($insql, $inparams) = $DB->get_in_or_equal($ltiids, SQL_PARAMS_NAMED);
@@ -333,17 +332,21 @@ class provider implements
 
         $recordset = $DB->get_recordset_select('lti_submission', "userid = :userid AND ltiid {$insql}", $params, 'dateupdated, id');
 
-        $return = [];
-        foreach ($recordset as $record) {
-            $return[$record->ltiid] = [
+        self::recordset_loop_and_export($recordset, 'ltiid', [], function ($carry, $record) use ($user, $ltiidstocmids) {
+            $carry[] = [
                 'gradepercent' => $record->gradepercent,
                 'originalgrade' => $record->originalgrade,
                 'datesubmitted' => transform::datetime($record->datesubmitted),
                 'dateupdated' => transform::datetime($record->dateupdated)
             ];
-        }
-
-        return $return;
+            return $carry;
+        }, function ($ltiid, $data) use ($user, $ltiidstocmids) {
+            $context = \context_module::instance($ltiidstocmids[$ltiid]);
+            $contextdata = helper::get_context_data($context, $user);
+            $finaldata = (object)array_merge((array)$contextdata, ['submissions' => $data]);
+            helper::export_context_files($context, $user);
+            writer::with_context($context)->export_data([], $finaldata);
+        });
     }
 
     /**

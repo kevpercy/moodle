@@ -28,8 +28,6 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\userlist;
-use core_privacy\local\request\helper;
-use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -142,15 +140,7 @@ class provider implements
 
         // Get all the LTI activities associated with the above course modules.
         $ltiidstocmids = self::get_lti_ids_to_cmids_from_cmids($cmids);
-        $instancedata = \core_ltix\privacy\provider::export_instance_data($user->id, array_keys($ltiidstocmids));
-
-        foreach ($instancedata as $ltiid => $data) {
-            $context = \context_module::instance($ltiidstocmids[$ltiid]);
-            $contextdata = helper::get_context_data($context, $user);
-            $finaldata = (object) array_merge((array) $contextdata, ['submissions' => $data]);
-            helper::export_context_files($context, $user);
-            writer::with_context($context)->export_data([], $finaldata);
-        }
+        \core_ltix\privacy\provider::export_instance_data($user->id, $ltiidstocmids);
     }
 
     /**
