@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-use core_ltix\local\placement\placements_manager;
+namespace mod_lti;
 
 /**
  * Unit tests for mod_lti upgradelib.
@@ -330,5 +330,94 @@ final class upgradelib_test extends \advanced_testcase {
                 }
             }
         }
+    }
+
+    /**
+     * Test covering the creation of links for existing tools during upgrade.
+     *
+     * @covers lti_migration_upgrade_helper::create_resource_links
+     * @return void
+     */
+    public function test_create_resource_links(): void {
+        $this->resetAfterTest();
+        global $DB;
+
+        /** @var mod_lti_generator $ltigenerator */
+        $ltigenerator = $this->getDataGenerator()->get_plugin_generator('mod_lti');
+
+        $course1 = $this->getDataGenerator()->create_course();
+        $course2 = $this->getDataGenerator()->create_course();
+
+        // Site tool.
+        $tool1id = $ltigenerator->create_tool_types([
+            'name' => 'Test tool 1',
+            'description' => 'Good example description',
+            'tooldomain' => 'example.com',
+            'baseurl' => 'https://example.com/launch',
+            'coursevisible' => \core_ltix\constants::LTI_COURSEVISIBLE_ACTIVITYCHOOSER,
+            'lti_contentitem' => 1,
+        ]);
+        // A link created using tool1 in course 1.
+        $tool1instance1 = $ltigenerator->create_instance([
+            'course' => $course1->id,
+            'typeid' => $tool1id,
+        ]);
+        // Another link created using tool1 in course 2.
+        $tool1instance2 = $ltigenerator->create_instance([
+            'course' => $course2->id,
+            'typeid' => $tool1id,
+        ]);
+
+        // Course tool.
+        $tool2id = $ltigenerator->create_course_tool_types([
+            'name' => 'Test tool 2',
+            'description' => 'Good example description',
+            'tooldomain' => 'example2.com',
+            'baseurl' => 'https://example2.com/launch',
+            'coursevisible' => \core_ltix\constants::LTI_COURSEVISIBLE_ACTIVITYCHOOSER,
+            'lti_contentitem' => 1,
+            'course' => $course1->id,
+        ]);
+        // A link created using tool2 in course 2.
+        $tool2instance = $ltigenerator->create_instance([
+            'course' => $course2->id,
+            'typeid' => $tool2id,
+        ]);
+
+        // Manually configured instance (legacy).
+        $manuallyconfigureinstance = $ltigenerator->create_instance([
+            'course' => $course1->id,
+            'toolurl' => 'https://example3.com/launch',
+            'typeid' => null,
+        ]);
+
+        // The ids of all lti instances.
+        $instanceids = [
+            $tool1instance1->id,
+            $tool1instance2->id,
+            $tool2instance->id,
+            $manuallyconfigureinstance->id,
+        ];
+
+        // Create the links, verifying that a link is created for each lti instance, and has the same id.
+        $migrationhelper = new lti_migration_upgrade_helper();
+        $migrationhelper->create_resource_links();
+
+        $links = $DB->get_records('lti_resource_link');
+        $linkids = array_column($links, 'id');
+        $this->assertEquals($instanceids, $linkids);
+
+        // Insert another link, verifying that the table sequence has been reset properly as part of the link creation.
+        $newlink = new \core_ltix\local\lticore\models\resource_link(0, (object) [
+            'typeid' => 4,
+            'component' => 'mod_lti',
+            'itemtype' => 'mod_lti:activityplacement',
+            'itemid' => 432,
+            'contextid' => 33,
+            'url' => (new \moodle_url('http://tool.example.com/my/resource'))->out(false),
+            'title' => 'My resource',
+        ]);
+        $newlink->save();
+        $this->assertEquals(max($instanceids) + 1, $newlink->get('id'));
     }
 }

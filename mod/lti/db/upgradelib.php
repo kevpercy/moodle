@@ -163,4 +163,40 @@ class lti_migration_upgrade_helper {
             'coursecontextlevel' => CONTEXT_COURSE,
         ]);
     }
+
+    /**
+     * Creates a resource link for every lti activity instance. Links are owned by mod_lti and are identified by the placementtype.
+     *
+     * @return void
+     */
+    public function create_resource_links(): void {
+        global $DB;
+        // Note: existing lti links can have typeid = null under the following circumstances:
+        // a) the link is a legacy, manually-configured instance.
+        // b) the link has been restored, cross-site, where the tool was not restored (site tools aren't).
+        // All lti records will have a corresponding lti_resource_link record created for them.
+        $sql = "INSERT INTO {lti_resource_link} (id, typeid, component, itemtype, itemid, contextid, url, title, text,
+                             textformat, gradable, launchcontainer, customparams, icon, servicesalt)
+                     SELECT lti.id, lti.typeid, :component, :itemtype, cm.id, ctx.id, lti.toolurl, lti.name, lti.intro,
+                            lti.introformat, :gradable, lti.launchcontainer, lti.instructorcustomparameters, lti.icon,
+                            lti.servicesalt
+                       FROM {lti} lti
+                       JOIN {course_modules} cm ON (cm.instance = lti.id)
+                       JOIN {modules} m ON (m.id = cm.module)
+                       JOIN {context} ctx ON (ctx.instanceid = cm.id)
+                      WHERE m.name = :ltimodulename
+                        AND ctx.contextlevel = :contextlevel";
+        $DB->execute($sql, [
+            'component' => 'mod_lti',
+            'itemtype' => 'mod_lti:activityplacement', // The placement type. See mod/lti/db/lti.php where this is defined.
+            'gradable' => 1, // All links owned by mod_lti are deemed gradable since they are used in an activity placement.
+            'ltimodulename' => 'lti',
+            'contextlevel' => CONTEXT_MODULE,
+        ]);
+
+        // Reset table sequence for the id column.
+        $table = new xmldb_table('lti_resource_link');
+        $DB->get_manager()->reset_sequence($table);
+
+    }
 }

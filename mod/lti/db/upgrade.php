@@ -175,10 +175,13 @@ function xmldb_lti_upgrade($oldversion) {
 
         $migrationhelper = new lti_migration_upgrade_helper();
         $migrationhelper->create_default_placements();
+        $migrationhelper->create_resource_links();
 
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2025020301, 'lti');
     }
+
+
 
     return true;
 }
