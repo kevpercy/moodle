@@ -24,4 +24,15 @@ namespace core_ltix\local\placement;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class deeplinking_placement_handler implements placement_handler {
+
+    /**
+     * Formats the ContentItemSelection response from the tool.
+     *
+     * @param string $contentitemsjson The JSON data returned from the tool
+     * @param object $tool The tool data itself
+     * @return \stdClass|string
+     */
+    public static function format_contentitem_return_data(string $contentitemsjson, object $tool): \stdClass|string {
+        return $contentitemsjson;
+    }
 }

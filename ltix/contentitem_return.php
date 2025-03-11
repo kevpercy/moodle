@@ -89,8 +89,33 @@ $redirecturl = null;
 $returndata = null;
 if (empty($errormsg) && !empty($items)) {
     try {
-        $returndata = \core_ltix\helper::tool_configuration_from_content_item($id, $messagetype, $version, $consumerkey,
-            $items);
+        $tool = \core_ltix\helper::get_type($id);
+        // Validate parameters.
+        if (!$tool) {
+            throw new \moodle_exception('errortooltypenotfound', 'core_ltix');
+        }
+        // Check lti_message_type. Show debugging if it's not set to ContentItemSelection.
+        // No need to throw exceptions for now since lti_message_type does not seem to be used in this processing at the moment.
+        if ($messagetype !== 'ContentItemSelection') {
+            debugging("lti_message_type is invalid: {$messagetype}. It should be set to 'ContentItemSelection'.",
+                DEBUG_DEVELOPER);
+        }
+
+        // Check LTI versions from our side and the response's side. Show debugging if they don't match.
+        // No need to throw exceptions for now since LTI version does not seem to be used in this processing at the moment.
+        $expectedversion = $tool->ltiversion;
+        $islti2 = ($expectedversion === \core_ltix\constants::LTI_VERSION_2);
+        if ($version !== $expectedversion) {
+            debugging("lti_version from response does not match the tool's configuration. Tool: {$expectedversion}," .
+                " Response: {$version}", DEBUG_DEVELOPER);
+        }
+
+        // TODO: Fix how this string is extracted and passed through.
+        $placementtype = 'mod_lti:activityplacement';
+        $placementinstance = \core_ltix\local\placement\placements_manager::get_instance()
+            ->get_deeplinking_placement_instance($placementtype);
+
+        $returndata = $placementinstance::format_contentitem_return_data($items, $tool);
     } catch (moodle_exception $e) {
         $errormsg = $e->getMessage();
     }
